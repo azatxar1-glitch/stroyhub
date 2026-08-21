@@ -1,0 +1,57 @@
+import {
+  ClipboardList,
+  Calculator,
+  Ruler,
+  FileText,
+  FileCheck,
+  Map,
+  Receipt,
+  ShieldCheck,
+  HardHat,
+  Wrench,
+  PenTool,
+  Boxes,
+  Search,
+  Compass,
+  Users,
+  Paintbrush,
+  Building2,
+  Zap,
+  Droplets,
+  Wind,
+  Building,
+  Home,
+  MoreHorizontal,
+  type LucideIcon,
+} from "lucide-react";
+
+const ICONS: Record<string, LucideIcon> = {
+  ClipboardList,
+  Calculator,
+  Ruler,
+  FileText,
+  FileCheck,
+  Map,
+  Receipt,
+  ShieldCheck,
+  HardHat,
+  Wrench,
+  PenTool,
+  Boxes,
+  Search,
+  Compass,
+  Users,
+  Paintbrush,
+  Building2,
+  Zap,
+  Droplets,
+  Wind,
+  Building,
+  Home,
+  MoreHorizontal,
+};
+
+export function CategoryIcon({ name, size = 20, className }: { name?: string | null; size?: number; className?: string }) {
+  const Icon = (name && ICONS[name]) || MoreHorizontal;
+  return <Icon size={size} className={className} />;
+}

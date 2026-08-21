@@ -1,0 +1,43 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Pencil, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export function JobOwnerActions({ jobId, status }: { jobId: string; status: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function closeJob() {
+    if (!confirm("Закрыть заявку? Она перестанет быть доступна для откликов.")) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CANCELLED" }),
+      });
+      if (res.ok) router.refresh();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (status !== "OPEN") return null;
+
+  return (
+    <div className="flex gap-2">
+      <Link
+        href={`/jobs/${jobId}/edit`}
+        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-sm font-medium hover:bg-surface"
+      >
+        <Pencil size={14} /> Редактировать
+      </Link>
+      <Button size="sm" variant="outline" onClick={closeJob} disabled={loading} className="gap-1.5 text-danger hover:bg-danger-bg">
+        <XCircle size={14} /> Закрыть заявку
+      </Button>
+    </div>
+  );
+}

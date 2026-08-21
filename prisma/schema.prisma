@@ -1,0 +1,344 @@
+// SQLite for local dev/demo. To move to production Postgres:
+// 1) change provider below to "postgresql"
+// 2) set DATABASE_URL to a postgres connection string
+// String fields documented as "enum-like" are kept as String (not Prisma enum)
+// because SQLite does not support native enums; validated in app code via zod.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Auth ----------
+
+/// role: "CUSTOMER" | "EXECUTOR" | "ADMIN"
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  role          String    @default("CUSTOMER")
+  phone         String?
+  city          String?
+  avatarUrl     String?
+  bio           String?
+  isBlocked     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  executorProfile ExecutorProfile?
+
+  jobs      Job[]      @relation("CustomerJobs")
+  proposals Proposal[] @relation("ExecutorProposals")
+
+  ordersAsCustomer Order[] @relation("CustomerOrders")
+  ordersAsExecutor Order[] @relation("ExecutorOrders")
+
+  sentMessages     Message[]      @relation("SentMessages")
+  conversationsAsCustomer Conversation[] @relation("CustomerConversations")
+  conversationsAsExecutor Conversation[] @relation("ExecutorConversations")
+
+  reviewsWritten Review[] @relation("ReviewAuthor")
+  reviewsReceived Review[] @relation("ReviewTarget")
+
+  notifications Notification[]
+
+  complaintsFiled    Complaint[] @relation("ComplaintReporter")
+
+  @@index([role])
+  @@index([city])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------- Categories & Skills ----------
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+  icon  String?
+  order Int    @default(0)
+
+  jobs             Job[]
+  executorProfiles ExecutorProfile[]
+}
+
+model Skill {
+  id   String @id @default(cuid())
+  name String @unique
+
+  executors ExecutorSkill[]
+}
+
+model ExecutorSkill {
+  executorProfileId String
+  skillId            String
+
+  executorProfile ExecutorProfile @relation(fields: [executorProfileId], references: [id], onDelete: Cascade)
+  skill           Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([executorProfileId, skillId])
+}
+
+// ---------- Executor profile ----------
+
+/// availability: "AVAILABLE" | "BUSY"
+model ExecutorProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  categoryId       String
+  headline         String
+  description      String?
+  experienceYears  Int      @default(0)
+  remoteAvailable  Boolean  @default(false)
+  priceFrom        Int?
+  availability     String   @default("AVAILABLE")
+  ratingAvg        Float    @default(0)
+  ratingCount      Int      @default(0)
+  completedOrders  Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+
+  skills          ExecutorSkill[]
+  portfolioItems  PortfolioItem[]
+
+  @@index([categoryId])
+}
+
+model PortfolioItem {
+  id                 String   @id @default(cuid())
+  executorProfileId  String
+  title              String
+  description        String?
+  imageUrl           String
+  createdAt          DateTime @default(now())
+
+  executorProfile ExecutorProfile @relation(fields: [executorProfileId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Jobs (заявки) ----------
+
+/// status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
+/// locationType: "REMOTE" | "ON_SITE"
+model Job {
+  id           String    @id @default(cuid())
+  customerId   String
+  categoryId   String
+  title        String
+  description  String
+  city         String
+  address      String?
+  locationType String    @default("ON_SITE")
+  budget       Int?
+  deadline     String?
+  status       String    @default("OPEN")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  customer User     @relation("CustomerJobs", fields: [customerId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  attachments   JobAttachment[]
+  proposals     Proposal[]
+  conversations Conversation[]
+  order         Order?
+
+  @@index([categoryId])
+  @@index([city])
+  @@index([status])
+}
+
+model JobAttachment {
+  id       String @id @default(cuid())
+  jobId    String
+  url      String
+  filename String
+  type     String
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+// ---------- Proposals (отклики) ----------
+
+/// status: "PENDING" | "ACCEPTED" | "REJECTED"
+model Proposal {
+  id         String   @id @default(cuid())
+  jobId      String
+  executorId String
+  price      Int
+  durationDays Int?
+  comment    String
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+
+  job      Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  executor User @relation("ExecutorProposals", fields: [executorId], references: [id])
+
+  order Order?
+
+  @@unique([jobId, executorId])
+  @@index([jobId])
+  @@index([executorId])
+}
+
+// ---------- Conversations & Messages ----------
+
+model Conversation {
+  id         String   @id @default(cuid())
+  jobId      String?
+  customerId String
+  executorId String
+  createdAt  DateTime @default(now())
+
+  job      Job?  @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  customer User @relation("CustomerConversations", fields: [customerId], references: [id])
+  executor User @relation("ExecutorConversations", fields: [executorId], references: [id])
+
+  messages Message[]
+
+  @@unique([jobId, customerId, executorId])
+  @@index([customerId])
+  @@index([executorId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  text           String
+  createdAt      DateTime @default(now())
+  readAt         DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([conversationId])
+}
+
+// ---------- Orders (заказы) ----------
+
+/// status: "NEW" | "IN_PROGRESS" | "REVIEW" | "COMPLETED" | "CANCELLED"
+model Order {
+  id          String    @id @default(cuid())
+  jobId       String    @unique
+  proposalId  String    @unique
+  customerId  String
+  executorId  String
+  price       Int
+  deadline    String?
+  status      String    @default("NEW")
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  job      Job      @relation(fields: [jobId], references: [id])
+  proposal Proposal @relation(fields: [proposalId], references: [id])
+  customer User     @relation("CustomerOrders", fields: [customerId], references: [id])
+  executor User     @relation("ExecutorOrders", fields: [executorId], references: [id])
+
+  reviews Review[]
+
+  @@index([customerId])
+  @@index([executorId])
+  @@index([status])
+}
+
+// ---------- Reviews ----------
+
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String
+  authorId  String
+  targetId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  author User  @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target User  @relation("ReviewTarget", fields: [targetId], references: [id])
+
+  @@unique([orderId, authorId])
+  @@index([targetId])
+}
+
+// ---------- Notifications ----------
+
+/// type: "PROPOSAL_RECEIVED" | "PROPOSAL_ACCEPTED" | "PROPOSAL_REJECTED" | "NEW_MESSAGE" | "ORDER_STATUS_CHANGED" | "NEW_REVIEW"
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
+// ---------- Complaints (admin moderation) ----------
+
+/// status: "OPEN" | "RESOLVED" | "DISMISSED"
+/// targetType: "USER" | "JOB"
+model Complaint {
+  id         String   @id @default(cuid())
+  reporterId String
+  targetType String
+  targetId   String
+  reason     String
+  status     String   @default("OPEN")
+  createdAt  DateTime @default(now())
+
+  reporter User @relation("ComplaintReporter", fields: [reporterId], references: [id])
+
+  @@index([status])
+}
