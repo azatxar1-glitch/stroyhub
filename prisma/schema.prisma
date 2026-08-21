@@ -1,15 +1,13 @@
-// SQLite for local dev/demo. To move to production Postgres:
-// 1) change provider below to "postgresql"
-// 2) set DATABASE_URL to a postgres connection string
-// String fields documented as "enum-like" are kept as String (not Prisma enum)
-// because SQLite does not support native enums; validated in app code via zod.
+// Postgres (Neon) for production. String fields documented as "enum-like"
+// are kept as String (not Prisma enum) — carried over from the original
+// SQLite setup, where native enums aren't supported; validated in app code via zod.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
