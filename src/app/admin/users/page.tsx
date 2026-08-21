@@ -20,7 +20,7 @@ export default async function AdminUsersPage() {
         <p className="mt-1 text-muted">Всего: {users.length}</p>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="border-b border-border bg-surface text-left text-xs uppercase text-muted">
             <tr>

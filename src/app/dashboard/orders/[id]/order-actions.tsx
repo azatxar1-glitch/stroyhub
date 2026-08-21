@@ -41,13 +41,13 @@ export function OrderActions({ orderId, actions }: { orderId: string; actions: {
             variant={a.primary ? "default" : "outline"}
             onClick={() => transition(a.status)}
             disabled={loading !== null}
-            className={a.status === "CANCELLED" ? "text-danger hover:bg-danger-bg" : undefined}
+            className={a.status === "CANCELLED" ? "text-danger-text hover:bg-danger-bg" : undefined}
           >
             {loading === a.status ? "Сохранение..." : ORDER_STATUS_LABELS[a.status]}
           </Button>
         ))}
       </div>
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger-text">{error}</p>}
     </div>
   );
 }

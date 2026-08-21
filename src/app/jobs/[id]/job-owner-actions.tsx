@@ -28,15 +28,22 @@ export function JobOwnerActions({ jobId, status }: { jobId: string; status: stri
   if (status !== "OPEN") return null;
 
   return (
-    <div className="flex gap-2">
+    // Wraps instead of overflowing once the two labels no longer fit side by side.
+    <div className="flex flex-wrap gap-2">
       <Link
         href={`/jobs/${jobId}/edit`}
-        className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3 text-sm font-medium hover:bg-surface"
+        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface"
       >
-        <Pencil size={14} /> Редактировать
+        <Pencil size={14} aria-hidden /> Редактировать
       </Link>
-      <Button size="sm" variant="outline" onClick={closeJob} disabled={loading} className="gap-1.5 text-danger hover:bg-danger-bg">
-        <XCircle size={14} /> Закрыть заявку
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={closeJob}
+        disabled={loading}
+        className="gap-1.5 text-danger-text hover:border-danger/30 hover:bg-danger-bg"
+      >
+        <XCircle size={14} aria-hidden /> {loading ? "Закрываем…" : "Закрыть заявку"}
       </Button>
     </div>
   );

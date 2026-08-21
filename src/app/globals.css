@@ -1,69 +1,234 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------
+   StroyHub design system
+   Ink + neutral surfaces, orange used sparingly for actions only.
+   --------------------------------------------------------------- */
+
 :root {
-  --background: #ffffff;
-  --surface: #f8f9fb;
-  --foreground: #0f1720;
-  --muted: #667085;
-  --muted-foreground: #667085;
-  --border: #e4e7ec;
+  /* Surfaces */
+  --background: #f8fafc;
+  --card: #ffffff;
+  --surface: #f1f5f9;
+  --surface-strong: #e2e8f0;
 
-  --primary: #0f2942;
+  /* Text */
+  --foreground: #111827;
+  --muted: #6b7280;
+  --muted-foreground: #6b7280;
+  --faint: #9ca3af;
+
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+
+  /* Brand
+     #f97316 is the brand accent and is used for fills, icons and borders.
+     White on it is only 2.8:1, so filled controls carry ink text (6.3:1) and
+     accent *text* on light surfaces uses the darker --accent-text (5.2:1). */
+  --primary: #111827;
   --primary-foreground: #ffffff;
-  --accent: #d97706;
-  --accent-foreground: #ffffff;
+  --accent: #f97316;
+  --accent-foreground: #111827;
+  --accent-hover: #ea580c;
+  --accent-text: #c2410c;
+  --accent-soft: #fff7ed;
+  --accent-border: #fed7aa;
 
-  --success: #15803d;
-  --success-bg: #ecfdf3;
-  --warning: #b45309;
+  /* Status — solid values are fills, *-text values are the readable variants */
+  --success: #16a34a;
+  --success-text: #166534;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #d97706;
+  --warning-text: #9a3412;
   --warning-bg: #fffbeb;
-  --danger: #b91c1c;
+  --danger: #dc2626;
+  --danger-text: #b91c1c;
   --danger-bg: #fef2f2;
-  --info: #1d4ed8;
+  --info: #2563eb;
   --info-bg: #eff6ff;
 
-  --radius: 0.625rem;
+  /* Shape */
+  --radius-sm: 10px;
+  --radius: 12px;
+  --radius-lg: 16px;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-card: var(--card);
   --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
+
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
 
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
 
   --color-success: var(--success);
+  --color-success-text: var(--success-text);
   --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
   --color-warning: var(--warning);
+  --color-warning-text: var(--warning-text);
   --color-warning-bg: var(--warning-bg);
   --color-danger: var(--danger);
+  --color-danger-text: var(--danger-text);
   --color-danger-bg: var(--danger-bg);
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
 
   --font-sans: var(--font-inter);
+
+  --radius-sm: var(--radius-sm);
   --radius-md: var(--radius);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-lg);
+}
+
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  /* Never let a wide child force the whole page to scroll sideways on mobile. */
+  overflow-x: hidden;
 }
+
+/* Dense, confident headings */
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.021em;
+  text-wrap: balance;
+}
+
+/* ---------------------------------------------------------------
+   Layout
+   --------------------------------------------------------------- */
 
 .container-page {
   width: 100%;
   max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-page {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-page {
+    padding-inline: 2rem;
+  }
+}
+
+/* Leaves room for the fixed mobile tab bar so content is never hidden by it. */
+.pb-safe-tabbar {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .pb-safe-tabbar {
+    padding-bottom: 0;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Focus — one consistent, visible ring everywhere
+   --------------------------------------------------------------- */
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------------------------------------------------------------
+   Motion — restrained: short, small, and only on intent
+   --------------------------------------------------------------- */
+
+@keyframes sh-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: sh-fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes sh-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: sh-shimmer 1.6s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Utilities
+   --------------------------------------------------------------- */
+
+/* Blueprint grid used behind dark hero/CTA sections. */
+.blueprint-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -71,6 +236,15 @@ body {
   height: 6px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: var(--border);
+  background-color: var(--border-strong);
   border-radius: 999px;
+}
+
+/* Horizontal chip rails scroll without showing a bar. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

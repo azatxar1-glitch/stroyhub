@@ -95,7 +95,7 @@ export function PortfolioManager({ items }: { items: PortfolioItem[] }) {
               <button
                 onClick={() => remove(item.id)}
                 disabled={deletingId === item.id}
-                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-danger opacity-0 shadow transition-opacity group-hover:opacity-100"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-danger-text opacity-0 shadow transition-opacity group-hover:opacity-100"
               >
                 <Trash2 size={14} />
               </button>
@@ -131,7 +131,7 @@ export function PortfolioManager({ items }: { items: PortfolioItem[] }) {
             <Label htmlFor="pf-desc">Описание</Label>
             <Textarea id="pf-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
-          {error && <p className="text-sm text-danger">{error}</p>}
+          {error && <p className="text-sm text-danger-text">{error}</p>}
           <Button className="w-full" onClick={save} disabled={saving}>
             {saving ? "Сохранение..." : "Добавить"}
           </Button>

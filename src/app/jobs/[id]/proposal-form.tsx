@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
+import { CheckCircle2, Send } from "lucide-react";
 import { proposalCreateSchema, type ProposalCreateInput } from "@/lib/validations";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { LinkButton } from "@/components/ui/link-button";
 
 export function ProposalForm({ jobId, alreadyApplied }: { jobId: string; alreadyApplied: boolean }) {
   const router = useRouter();
@@ -43,6 +44,8 @@ export function ProposalForm({ jobId, alreadyApplied }: { jobId: string; already
       }
       setDone(true);
       router.refresh();
+    } catch {
+      setServerError("Нет соединения с сервером. Попробуйте ещё раз.");
     } finally {
       setLoading(false);
     }
@@ -50,45 +53,83 @@ export function ProposalForm({ jobId, alreadyApplied }: { jobId: string; already
 
   if (done) {
     return (
-      <div className="flex items-center gap-2 rounded-md bg-success-bg px-4 py-3 text-sm text-success">
-        <CheckCircle2 size={18} />
-        Вы откликнулись на эту заявку
+      <div id="proposal-form" className="rounded-xl border border-success-border bg-success-bg p-4">
+        <p className="flex items-center gap-2 text-sm font-semibold text-success-text">
+          <CheckCircle2 size={18} aria-hidden />
+          Отклик отправлен
+        </p>
+        <p className="mt-1.5 text-sm text-muted">
+          Заказчик увидит вашу цену и срок. Ответ придёт в уведомления и в чат.
+        </p>
+        <LinkButton href="/dashboard/proposals" variant="outline" size="sm" className="mt-3.5 w-full">
+          Мои отклики
+        </LinkButton>
       </div>
     );
   }
 
   if (!open) {
     return (
-      <Button className="w-full" onClick={() => setOpen(true)}>
-        Откликнуться
-      </Button>
+      <div id="proposal-form">
+        <Button className="w-full gap-2" size="lg" onClick={() => setOpen(true)}>
+          <Send size={17} aria-hidden />
+          Откликнуться
+        </Button>
+        <p className="mt-3 text-center text-xs text-muted">
+          Укажите свою цену и срок — заказчик сравнит предложения
+        </p>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+    <form id="proposal-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label htmlFor="price">Цена, ₽</Label>
-          <Input id="price" type="number" placeholder="45000" {...register("price")} />
-          {errors.price && <p className="mt-1 text-xs text-danger">{errors.price.message}</p>}
+          <Label htmlFor="price">Ваша цена, ₽</Label>
+          <Input id="price" type="number" inputMode="numeric" placeholder="45000" {...register("price")} />
+          {errors.price && (
+            <p className="mt-1.5 text-xs font-medium text-danger-text">{errors.price.message}</p>
+          )}
         </div>
         <div>
-          <Label htmlFor="durationDays">Срок, дн.</Label>
-          <Input id="durationDays" type="number" placeholder="7" {...register("durationDays")} />
+          <Label htmlFor="durationDays" hint="дней">
+            Срок
+          </Label>
+          <Input
+            id="durationDays"
+            type="number"
+            inputMode="numeric"
+            placeholder="7"
+            {...register("durationDays")}
+          />
         </div>
       </div>
+
       <div>
         <Label htmlFor="comment">Комментарий</Label>
-        <Textarea id="comment" rows={3} placeholder="Готов выполнить работу за 40 000 ₽. Срок — 7 дней." {...register("comment")} />
-        {errors.comment && <p className="mt-1 text-xs text-danger">{errors.comment.message}</p>}
+        <Textarea
+          id="comment"
+          rows={4}
+          placeholder="Что именно сделаете, какой опыт с похожими задачами, что нужно от заказчика."
+          {...register("comment")}
+        />
+        {errors.comment && (
+          <p className="mt-1.5 text-xs font-medium text-danger-text">{errors.comment.message}</p>
+        )}
       </div>
-      {serverError && <p className="text-sm text-danger">{serverError}</p>}
-      <div className="flex gap-2">
-        <Button type="submit" className="flex-1" disabled={loading}>
-          {loading ? "Отправка..." : "Отправить отклик"}
+
+      {serverError && (
+        <p role="alert" className="rounded-lg bg-danger-bg px-3.5 py-2.5 text-sm font-medium text-danger-text">
+          {serverError}
+        </p>
+      )}
+
+      <div className="flex gap-2.5">
+        <Button type="submit" className="flex-1 gap-2" disabled={loading}>
+          {loading ? "Отправка…" : "Отправить отклик"}
         </Button>
-        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+        <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
           Отмена
         </Button>
       </div>

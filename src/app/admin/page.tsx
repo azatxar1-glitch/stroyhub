@@ -51,7 +51,7 @@ export default async function AdminOverviewPage() {
       {openComplaints > 0 && (
         <Link
           href="/admin/complaints"
-          className="mb-6 flex items-center gap-2 rounded-lg bg-danger-bg px-4 py-3 text-sm font-medium text-danger hover:bg-danger-bg/80"
+          className="mb-6 flex items-center gap-2 rounded-lg bg-danger-bg px-4 py-3 text-sm font-medium text-danger-text hover:bg-danger-bg/80"
         >
           <Flag size={16} /> {openComplaints} новых жалоб требуют рассмотрения
         </Link>
@@ -66,7 +66,7 @@ export default async function AdminOverviewPage() {
                 <div className="text-sm text-muted">{s.label}</div>
                 <div className="mt-0.5 text-xs text-muted">{s.sub}</div>
               </div>
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface text-foreground">
                 <s.icon size={18} />
               </span>
             </CardContent>
@@ -81,7 +81,7 @@ export default async function AdminOverviewPage() {
               <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <UserCog size={16} /> Новые пользователи
               </h2>
-              <Link href="/admin/users" className="text-xs text-primary hover:underline">
+              <Link href="/admin/users" className="text-xs font-semibold text-accent-text hover:underline">
                 Все
               </Link>
             </div>
@@ -102,7 +102,7 @@ export default async function AdminOverviewPage() {
               <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
                 <FileText size={16} /> Новые заявки
               </h2>
-              <Link href="/admin/jobs" className="text-xs text-primary hover:underline">
+              <Link href="/admin/jobs" className="text-xs font-semibold text-accent-text hover:underline">
                 Все
               </Link>
             </div>

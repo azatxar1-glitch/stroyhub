@@ -82,7 +82,7 @@ export function ExecutorProfileForm({ profile, categories }: { profile: ProfileW
               </option>
             ))}
           </Select>
-          {errors.categoryId && <p className="mt-1 text-sm text-danger">{errors.categoryId.message}</p>}
+          {errors.categoryId && <p className="mt-1 text-sm text-danger-text">{errors.categoryId.message}</p>}
         </div>
         <div>
           <Label htmlFor="experienceYears">Опыт, лет</Label>
@@ -93,7 +93,7 @@ export function ExecutorProfileForm({ profile, categories }: { profile: ProfileW
       <div>
         <Label htmlFor="headline">Заголовок профиля</Label>
         <Input id="headline" placeholder="Инженер ПТО с опытом сдачи объектов «под ключ»" {...register("headline")} />
-        {errors.headline && <p className="mt-1 text-sm text-danger">{errors.headline.message}</p>}
+        {errors.headline && <p className="mt-1 text-sm text-danger-text">{errors.headline.message}</p>}
       </div>
 
       <div>
@@ -143,7 +143,7 @@ export function ExecutorProfileForm({ profile, categories }: { profile: ProfileW
             {skills.map((s) => (
               <span key={s} className="flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-medium text-foreground">
                 {s}
-                <button type="button" onClick={() => setSkills(skills.filter((x) => x !== s))} className="text-muted hover:text-danger">
+                <button type="button" onClick={() => setSkills(skills.filter((x) => x !== s))} className="text-muted hover:text-danger-text">
                   <X size={12} />
                 </button>
               </span>
@@ -152,9 +152,9 @@ export function ExecutorProfileForm({ profile, categories }: { profile: ProfileW
         )}
       </div>
 
-      {serverError && <p className="text-sm text-danger">{serverError}</p>}
+      {serverError && <p className="text-sm text-danger-text">{serverError}</p>}
       {saved && (
-        <p className="flex items-center gap-1.5 text-sm text-success">
+        <p className="flex items-center gap-1.5 text-sm text-success-text">
           <CheckCircle2 size={15} /> Профиль сохранён
         </p>
       )}

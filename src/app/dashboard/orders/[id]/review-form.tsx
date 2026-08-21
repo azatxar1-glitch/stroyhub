@@ -38,7 +38,7 @@ export function ReviewForm({ orderId, targetName }: { orderId: string; targetNam
 
   if (done) {
     return (
-      <div className="flex items-center gap-2 rounded-md bg-success-bg px-4 py-3 text-sm text-success">
+      <div className="flex items-center gap-2 rounded-md bg-success-bg px-4 py-3 text-sm text-success-text">
         <CheckCircle2 size={18} /> Спасибо за отзыв!
       </div>
     );
@@ -49,7 +49,7 @@ export function ReviewForm({ orderId, targetName }: { orderId: string; targetNam
       <p className="text-sm text-muted">Оцените работу с {targetName}</p>
       <RatingInput value={rating} onChange={setRating} />
       <Textarea rows={3} placeholder="Комментарий (необязательно)" value={comment} onChange={(e) => setComment(e.target.value)} />
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="text-sm text-danger-text">{error}</p>}
       <Button onClick={submit} disabled={loading}>
         {loading ? "Отправка..." : "Оставить отзыв"}
       </Button>

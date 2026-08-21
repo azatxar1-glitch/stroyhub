@@ -95,7 +95,7 @@ export function ProfileForm({ user }: { user: User }) {
         <div>
           <Label htmlFor="name">Имя</Label>
           <Input id="name" {...register("name")} />
-          {errors.name && <p className="mt-1 text-sm text-danger">{errors.name.message}</p>}
+          {errors.name && <p className="mt-1 text-sm text-danger-text">{errors.name.message}</p>}
         </div>
         <div>
           <Label htmlFor="phone">Телефон</Label>
@@ -113,9 +113,9 @@ export function ProfileForm({ user }: { user: User }) {
         <Textarea id="bio" rows={4} placeholder="Расскажите о своём опыте..." {...register("bio")} />
       </div>
 
-      {serverError && <p className="text-sm text-danger">{serverError}</p>}
+      {serverError && <p className="text-sm text-danger-text">{serverError}</p>}
       {saved && (
-        <p className="flex items-center gap-1.5 text-sm text-success">
+        <p className="flex items-center gap-1.5 text-sm text-success-text">
           <CheckCircle2 size={15} /> Сохранено
         </p>
       )}

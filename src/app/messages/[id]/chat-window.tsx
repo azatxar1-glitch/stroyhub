@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Send } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn, formatDateTime } from "@/lib/utils";
 
@@ -89,14 +89,24 @@ export function ChatWindow({ conversationId, prefill }: { conversationId: string
   const other = session?.user.id === conversation?.customer?.id ? conversation?.executor : conversation?.customer;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-[60vh] flex-col md:min-h-0">
       {other && (
-        <div className="flex items-center gap-3 border-b border-border p-4">
-          <Avatar name={other.name} src={other.avatarUrl} size={36} />
-          <div>
-            <div className="text-sm font-semibold text-foreground">{other.name}</div>
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+          <Link
+            href="/messages"
+            aria-label="К списку диалогов"
+            className="-ml-1.5 rounded-lg p-1.5 text-muted transition-colors hover:bg-surface hover:text-foreground md:hidden"
+          >
+            <ArrowLeft size={20} aria-hidden />
+          </Link>
+          <Avatar name={other.name} src={other.avatarUrl} size={38} />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-bold text-foreground">{other.name}</div>
             {conversation?.job && (
-              <Link href={`/jobs/${conversation.job.id}`} className="text-xs text-muted hover:text-primary">
+              <Link
+                href={`/jobs/${conversation.job.id}`}
+                className="block truncate text-xs text-muted transition-colors hover:text-accent-text"
+              >
                 {conversation.job.title}
               </Link>
             )}
@@ -104,15 +114,28 @@ export function ChatWindow({ conversationId, prefill }: { conversationId: string
         </div>
       )}
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-4 scrollbar-thin">
-        {messages.length === 0 && <p className="text-center text-sm text-muted">Начните переписку</p>}
+      <div className="flex-1 space-y-2.5 overflow-y-auto p-4 scrollbar-thin">
+        {messages.length === 0 && (
+          <p className="py-10 text-center text-sm text-muted">
+            Начните переписку — обсудите детали задачи, сроки и стоимость.
+          </p>
+        )}
         {messages.map((m) => {
           const mine = m.senderId === session?.user.id;
           return (
             <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-              <div className={cn("max-w-[75%] rounded-2xl px-4 py-2 text-sm", mine ? "bg-primary text-white" : "bg-surface text-foreground")}>
-                <p className="whitespace-pre-wrap">{m.text}</p>
-                <p className={cn("mt-1 text-[10px]", mine ? "text-white/60" : "text-muted")}>{formatDateTime(m.createdAt)}</p>
+              <div
+                className={cn(
+                  "max-w-[78%] px-4 py-2.5 text-sm",
+                  mine
+                    ? "rounded-2xl rounded-br-md bg-accent text-accent-foreground"
+                    : "rounded-2xl rounded-bl-md bg-surface text-foreground"
+                )}
+              >
+                <p className="whitespace-pre-wrap leading-relaxed">{m.text}</p>
+                <p className={cn("mt-1 text-[10px]", mine ? "text-white/70" : "text-faint")}>
+                  {formatDateTime(m.createdAt)}
+                </p>
               </div>
             </div>
           );
@@ -131,15 +154,17 @@ export function ChatWindow({ conversationId, prefill }: { conversationId: string
             }
           }}
           rows={1}
-          placeholder="Напишите сообщение..."
-          className="flex-1 resize-none rounded-md border border-border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          aria-label="Текст сообщения"
+          placeholder="Напишите сообщение…"
+          className="max-h-32 flex-1 resize-none rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm text-foreground placeholder:text-faint focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10"
         />
         <button
           onClick={send}
           disabled={sending || !text.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
+          aria-label="Отправить сообщение"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground transition-colors hover:bg-accent-hover disabled:opacity-40"
         >
-          <Send size={17} />
+          <Send size={17} aria-hidden />
         </button>
       </div>
     </div>

@@ -29,7 +29,7 @@ export default async function AdminComplaintsPage() {
       ) : (
         <div className="space-y-3">
           {complaints.map((c) => (
-            <div key={c.id} className="rounded-xl border border-border bg-white p-4">
+            <div key={c.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-sm">
                   <span className="font-medium text-foreground">{c.reporter.name}</span>

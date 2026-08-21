@@ -27,7 +27,7 @@ export function ComplaintActions({ id }: { id: string }) {
       <button
         onClick={() => setStatus("RESOLVED")}
         disabled={loading !== null}
-        className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-success hover:bg-success-bg"
+        className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-success-text hover:bg-success-bg"
       >
         <Check size={13} /> Решено
       </button>

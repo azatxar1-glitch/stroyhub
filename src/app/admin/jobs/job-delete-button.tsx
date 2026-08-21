@@ -23,7 +23,7 @@ export function JobDeleteButton({ jobId }: { jobId: string }) {
     <button
       onClick={remove}
       disabled={loading}
-      className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-danger hover:bg-danger-bg"
+      className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-danger-text hover:bg-danger-bg"
     >
       <Trash2 size={13} /> Удалить
     </button>

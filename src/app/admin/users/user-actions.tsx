@@ -32,8 +32,8 @@ export function UserBlockToggle({ userId, isBlocked, isAdmin }: { userId: string
       disabled={loading}
       className={
         isBlocked
-          ? "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-success hover:bg-success-bg"
-          : "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-danger hover:bg-danger-bg"
+          ? "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-success-text hover:bg-success-bg"
+          : "flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-danger-text hover:bg-danger-bg"
       }
     >
       {isBlocked ? <CheckCircle size={13} /> : <Ban size={13} />}

@@ -48,18 +48,23 @@ export function FileUploader({
 
   return (
     <div>
-      <div
+      <button
+        type="button"
         onClick={() => inputRef.current?.click()}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border bg-surface/50 px-4 py-6 text-center transition-colors hover:border-primary/50",
+          "flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong bg-surface/60 px-4 py-8 text-center transition-colors hover:border-accent hover:bg-accent-soft",
           uploading && "pointer-events-none opacity-60"
         )}
       >
-        {uploading ? <Loader2 size={22} className="animate-spin text-primary" /> : <Upload size={22} className="text-muted" />}
-        <p className="text-sm text-foreground">
-          {uploading ? "Загрузка..." : "Нажмите, чтобы выбрать файлы"}
-        </p>
-        {hint && <p className="text-xs text-muted">{hint}</p>}
+        {uploading ? (
+          <Loader2 size={24} className="animate-spin text-accent" aria-hidden />
+        ) : (
+          <Upload size={24} className="text-muted" aria-hidden />
+        )}
+        <span className="text-sm font-semibold text-foreground">
+          {uploading ? "Загрузка…" : "Нажмите, чтобы выбрать файлы"}
+        </span>
+        {hint && <span className="text-xs text-muted">{hint}</span>}
         <input
           ref={inputRef}
           type="file"
@@ -68,26 +73,31 @@ export function FileUploader({
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
         />
-      </div>
-      {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
+      </button>
+      {error && (
+        <p role="alert" className="mt-2 text-sm font-medium text-danger-text">
+          {error}
+        </p>
+      )}
 
       {value.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
+        <ul className="mt-3 space-y-2">
           {value.map((f, i) => (
             <li
               key={f.url + i}
-              className="flex items-center justify-between gap-2 rounded-md border border-border bg-white px-3 py-2 text-sm"
+              className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm"
             >
               <span className="flex min-w-0 items-center gap-2">
-                <Paperclip size={14} className="shrink-0 text-muted" />
-                <span className="truncate">{f.filename}</span>
+                <Paperclip size={14} className="shrink-0 text-muted" aria-hidden />
+                <span className="truncate font-medium text-foreground">{f.filename}</span>
               </span>
               <button
                 type="button"
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-                className="cursor-pointer rounded p-1 text-muted hover:bg-danger-bg hover:text-danger"
+                aria-label={`Удалить файл ${f.filename}`}
+                className="cursor-pointer rounded-lg p-1.5 text-muted transition-colors hover:bg-danger-bg hover:text-danger-text"
               >
-                <X size={14} />
+                <X size={15} aria-hidden />
               </button>
             </li>
           ))}

@@ -63,11 +63,11 @@ export function EditJobForm({ job, categories }: { job: Job; categories: Categor
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5 rounded-xl border border-border bg-white p-6 shadow-sm">
+    <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5 rounded-2xl border border-border bg-card p-6">
       <div>
         <Label htmlFor="title">Название задачи</Label>
         <Input id="title" {...register("title")} />
-        {errors.title && <p className="mt-1 text-sm text-danger">{errors.title.message}</p>}
+        {errors.title && <p className="mt-1 text-sm text-danger-text">{errors.title.message}</p>}
       </div>
 
       <div>
@@ -79,13 +79,13 @@ export function EditJobForm({ job, categories }: { job: Job; categories: Categor
             </option>
           ))}
         </Select>
-        {errors.categoryId && <p className="mt-1 text-sm text-danger">{errors.categoryId.message}</p>}
+        {errors.categoryId && <p className="mt-1 text-sm text-danger-text">{errors.categoryId.message}</p>}
       </div>
 
       <div>
         <Label htmlFor="description">Описание задачи</Label>
         <Textarea id="description" rows={6} {...register("description")} />
-        {errors.description && <p className="mt-1 text-sm text-danger">{errors.description.message}</p>}
+        {errors.description && <p className="mt-1 text-sm text-danger-text">{errors.description.message}</p>}
       </div>
 
       <div>
@@ -95,8 +95,8 @@ export function EditJobForm({ job, categories }: { job: Job; categories: Categor
             type="button"
             onClick={() => setValue("locationType", "ON_SITE")}
             className={cn(
-              "rounded-md border-2 px-3 py-2.5 text-sm font-medium transition-colors",
-              locationType === "ON_SITE" ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-surface"
+              "rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors",
+              locationType === "ON_SITE" ? "border-accent bg-accent-soft text-accent-text" : "border-border hover:bg-surface"
             )}
           >
             На объекте
@@ -105,8 +105,8 @@ export function EditJobForm({ job, categories }: { job: Job; categories: Categor
             type="button"
             onClick={() => setValue("locationType", "REMOTE")}
             className={cn(
-              "rounded-md border-2 px-3 py-2.5 text-sm font-medium transition-colors",
-              locationType === "REMOTE" ? "border-primary bg-primary/5 text-primary" : "border-border hover:bg-surface"
+              "rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors",
+              locationType === "REMOTE" ? "border-accent bg-accent-soft text-accent-text" : "border-border hover:bg-surface"
             )}
           >
             Удалённо
@@ -118,7 +118,7 @@ export function EditJobForm({ job, categories }: { job: Job; categories: Categor
         <div>
           <Label htmlFor="city">Город</Label>
           <Input id="city" {...register("city")} />
-          {errors.city && <p className="mt-1 text-sm text-danger">{errors.city.message}</p>}
+          {errors.city && <p className="mt-1 text-sm text-danger-text">{errors.city.message}</p>}
         </div>
         <div>
           <Label htmlFor="address">Адрес / объект</Label>
@@ -137,7 +137,7 @@ export function EditJobForm({ job, categories }: { job: Job; categories: Categor
         </div>
       </div>
 
-      {serverError && <p className="text-sm text-danger">{serverError}</p>}
+      {serverError && <p className="text-sm text-danger-text">{serverError}</p>}
 
       <div className="flex gap-2">
         <Button type="submit" disabled={loading} className="flex-1">

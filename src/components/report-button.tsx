@@ -41,13 +41,13 @@ export function ReportButton({ targetType, targetId }: { targetType: "USER" | "J
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-xs text-muted hover:text-danger"
+        className="flex items-center gap-1.5 text-xs text-muted hover:text-danger-text"
       >
         <Flag size={13} /> Пожаловаться
       </button>
       <Dialog open={open} onClose={() => setOpen(false)} title="Пожаловаться">
         {done ? (
-          <div className="flex items-center gap-2 rounded-md bg-success-bg px-4 py-3 text-sm text-success">
+          <div className="flex items-center gap-2 rounded-md bg-success-bg px-4 py-3 text-sm text-success-text">
             <CheckCircle2 size={18} />
             Жалоба отправлена. Мы её рассмотрим.
           </div>
@@ -59,7 +59,7 @@ export function ReportButton({ targetType, targetId }: { targetType: "USER" | "J
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
-            {error && <p className="text-sm text-danger">{error}</p>}
+            {error && <p className="text-sm text-danger-text">{error}</p>}
             <Button className="w-full" onClick={submit} disabled={loading}>
               {loading ? "Отправка..." : "Отправить жалобу"}
             </Button>

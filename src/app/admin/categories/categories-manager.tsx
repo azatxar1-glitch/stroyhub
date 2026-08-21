@@ -71,13 +71,13 @@ export function CategoriesManager({ categories }: { categories: CategoryData[] }
           <Plus size={15} /> Добавить
         </Button>
       </div>
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && <p className="mb-4 text-sm text-danger-text">{error}</p>}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((c) => (
-          <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-white p-3">
+          <div key={c.id} className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface text-foreground">
                 <CategoryIcon name={c.icon} size={16} />
               </span>
               <div className="min-w-0">
@@ -90,7 +90,7 @@ export function CategoriesManager({ categories }: { categories: CategoryData[] }
             <button
               onClick={() => remove(c.id)}
               disabled={deletingId === c.id}
-              className="shrink-0 rounded-md p-1.5 text-muted hover:bg-danger-bg hover:text-danger"
+              className="shrink-0 rounded-md p-1.5 text-muted hover:bg-danger-bg hover:text-danger-text"
             >
               <Trash2 size={14} />
             </button>

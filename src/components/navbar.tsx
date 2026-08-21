@@ -3,17 +3,28 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
-import { Menu, X, HardHat, LayoutDashboard, MessageSquare, ShieldCheck, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  MessageSquare,
+  ShieldCheck,
+  LogOut,
+  User as UserIcon,
+  Plus,
+} from "lucide-react";
 import { LinkButton } from "@/components/ui/link-button";
 import { Avatar } from "@/components/ui/avatar";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/executors", label: "Исполнители" },
   { href: "/jobs", label: "Заявки" },
-  { href: "/#how-it-works", label: "Как это работает" },
+  { href: "/categories", label: "Категории" },
+  { href: "/how-it-works", label: "Как это работает" },
 ];
 
 export function Navbar() {
@@ -24,82 +35,101 @@ export function Navbar() {
 
   const user = session?.user;
 
-  return (
-    <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
-      <div className="container-page flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 font-bold text-primary">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-white">
-            <HardHat size={20} />
-          </span>
-          <span className="text-lg tracking-tight">СтройХаб</span>
-        </Link>
+  const closeMobile = () => setMobileOpen(false);
+  const closeMenu = () => setMenuOpen(false);
 
-        <nav className="hidden items-center gap-6 md:flex">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium text-foreground/80 transition-colors hover:text-primary",
-                pathname === link.href && "text-primary"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-md">
+      <div className="container-page flex h-16 items-center gap-4">
+        <Logo />
+
+        <nav aria-label="Основная навигация" className="ml-4 hidden items-center gap-1 lg:flex">
+          {NAV_LINKS.map((link) => {
+            const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+                  active ? "bg-surface text-foreground" : "text-muted hover:bg-surface hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="ml-auto flex items-center gap-2">
           {status === "loading" ? (
-            <div className="h-9 w-24 animate-pulse rounded-md bg-surface" />
+            <div className="skeleton h-9 w-32 rounded-lg" />
           ) : user ? (
             <>
-              {user.role === "CUSTOMER" && (
-                <LinkButton href="/jobs/new" size="sm" variant="accent">
-                  Разместить заявку
+              {user.role !== "EXECUTOR" && (
+                <LinkButton href="/jobs/new" size="sm" className="hidden gap-1.5 sm:inline-flex">
+                  <Plus size={16} aria-hidden />
+                  Создать заявку
                 </LinkButton>
               )}
-              <Link href="/messages" className="rounded-md p-2 text-foreground hover:bg-surface" aria-label="Сообщения">
-                <MessageSquare size={20} />
+              <Link
+                href="/messages"
+                className="hidden rounded-lg p-2.5 text-muted transition-colors hover:bg-surface hover:text-foreground sm:block"
+                aria-label="Сообщения"
+              >
+                <MessageSquare size={19} aria-hidden />
               </Link>
               <NotificationsBell />
-              <div className="relative">
+
+              <div className="relative hidden sm:block">
                 <button
                   onClick={() => setMenuOpen((v) => !v)}
-                  className="flex cursor-pointer items-center gap-2 rounded-md p-1 hover:bg-surface"
+                  aria-expanded={menuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Меню профиля"
+                  className="flex cursor-pointer items-center rounded-full p-0.5 transition-shadow hover:ring-2 hover:ring-border"
                 >
-                  <Avatar name={user.name ?? "?"} src={user.image} size={32} />
+                  <Avatar name={user.name ?? "?"} src={user.image} size={34} />
                 </button>
                 {menuOpen && (
                   <>
-                    <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 z-40 mt-2 w-56 rounded-lg border border-border bg-white p-1.5 shadow-lg">
-                      <div className="px-3 py-2">
-                        <div className="truncate text-sm font-semibold">{user.name}</div>
+                    <div className="fixed inset-0 z-30" onClick={closeMenu} aria-hidden />
+                    <div
+                      role="menu"
+                      onClick={closeMenu}
+                      className="absolute right-0 z-40 mt-2 w-60 origin-top-right animate-fade-up rounded-xl border border-border bg-card p-1.5 shadow-[0_16px_40px_-16px_rgb(17_24_39/0.3)]"
+                    >
+                      <div className="px-3 py-2.5">
+                        <div className="truncate text-sm font-bold text-foreground">{user.name}</div>
                         <div className="truncate text-xs text-muted">{user.email}</div>
                       </div>
                       <div className="my-1 h-px bg-border" />
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-surface"
-                      >
-                        <LayoutDashboard size={16} /> Личный кабинет
-                      </Link>
+                      <MenuLink href="/dashboard" icon={LayoutDashboard}>
+                        Личный кабинет
+                      </MenuLink>
+                      <MenuLink href="/dashboard/profile" icon={UserIcon}>
+                        Профиль
+                      </MenuLink>
                       {user.role === "ADMIN" && (
-                        <Link
-                          href="/admin"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-surface"
-                        >
-                          <ShieldCheck size={16} /> Админ-панель
-                        </Link>
+                        <MenuLink href="/admin" icon={ShieldCheck}>
+                          Админ-панель
+                        </MenuLink>
                       )}
+                      <div className="my-1 h-px bg-border" />
                       <button
+                        role="menuitem"
                         onClick={() => signOut({ callbackUrl: "/" })}
-                        className="flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-danger hover:bg-danger-bg"
+                        className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-danger-text transition-colors hover:bg-danger-bg"
                       >
-                        <LogOut size={16} /> Выйти
+                        <LogOut size={16} aria-hidden /> Выйти
                       </button>
                     </div>
                   </>
@@ -107,70 +137,102 @@ export function Navbar() {
               </div>
             </>
           ) : (
-            <>
+            <div className="hidden items-center gap-2 sm:flex">
               <LinkButton href="/login" variant="ghost" size="sm">
                 Войти
               </LinkButton>
-              <LinkButton href="/register" size="sm">
+              <LinkButton href="/register" variant="outline" size="sm">
                 Регистрация
               </LinkButton>
-            </>
+              <LinkButton href="/jobs/new" size="sm" className="hidden gap-1.5 lg:inline-flex">
+                <Plus size={16} aria-hidden />
+                Создать заявку
+              </LinkButton>
+            </div>
           )}
-        </div>
 
-        <button
-          className="rounded-md p-2 text-foreground md:hidden"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label="Меню"
-        >
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+          <button
+            className="rounded-lg p-2.5 text-foreground transition-colors hover:bg-surface lg:hidden"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label={mobileOpen ? "Закрыть меню" : "Открыть меню"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X size={21} aria-hidden /> : <Menu size={21} aria-hidden />}
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-border bg-white px-4 py-4 md:hidden">
-          <nav className="flex flex-col gap-1">
+        <div className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto border-t border-border bg-card lg:hidden">
+          <nav
+            className="container-page flex flex-col gap-1 py-5"
+            aria-label="Мобильная навигация"
+            // Any navigation from inside the panel should dismiss it.
+            onClick={closeMobile}
+          >
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-surface"
+                className="rounded-xl px-4 py-3.5 text-[15px] font-semibold text-foreground transition-colors hover:bg-surface"
               >
                 {link.label}
               </Link>
             ))}
+
+            <div className="my-3 h-px bg-border" />
+
             {user ? (
               <>
-                <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-surface">
+                <Link
+                  href="/dashboard"
+                  className="rounded-xl px-4 py-3.5 text-[15px] font-semibold text-foreground hover:bg-surface"
+                >
                   Личный кабинет
                 </Link>
-                <Link href="/messages" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-surface">
+                <Link
+                  href="/messages"
+                  className="rounded-xl px-4 py-3.5 text-[15px] font-semibold text-foreground hover:bg-surface"
+                >
                   Сообщения
                 </Link>
-                {user.role === "CUSTOMER" && (
-                  <Link href="/jobs/new" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-surface">
-                    Разместить заявку
-                  </Link>
-                )}
+                <Link
+                  href="/dashboard/profile"
+                  className="rounded-xl px-4 py-3.5 text-[15px] font-semibold text-foreground hover:bg-surface"
+                >
+                  Профиль
+                </Link>
                 {user.role === "ADMIN" && (
-                  <Link href="/admin" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2.5 text-sm font-medium hover:bg-surface">
+                  <Link
+                    href="/admin"
+                    className="rounded-xl px-4 py-3.5 text-[15px] font-semibold text-foreground hover:bg-surface"
+                  >
                     Админ-панель
                   </Link>
                 )}
+                {user.role !== "EXECUTOR" && (
+                  <LinkButton href="/jobs/new" size="lg" className="mt-3 w-full gap-2">
+                    <Plus size={18} aria-hidden />
+                    Создать заявку
+                  </LinkButton>
+                )}
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="mt-1 cursor-pointer rounded-md px-3 py-2.5 text-left text-sm font-medium text-danger hover:bg-danger-bg"
+                  className="mt-2 cursor-pointer rounded-xl px-4 py-3.5 text-left text-[15px] font-semibold text-danger-text hover:bg-danger-bg"
                 >
                   Выйти
                 </button>
               </>
             ) : (
-              <div className="mt-2 flex gap-2">
-                <LinkButton href="/login" variant="outline" className="flex-1" onClick={() => setMobileOpen(false)}>
+              <div className="flex flex-col gap-2.5">
+                <LinkButton href="/jobs/new" size="lg" className="w-full gap-2">
+                  <Plus size={18} aria-hidden />
+                  Создать заявку
+                </LinkButton>
+                <LinkButton href="/login" variant="outline" size="lg" className="w-full">
                   Войти
                 </LinkButton>
-                <LinkButton href="/register" className="flex-1" onClick={() => setMobileOpen(false)}>
+                <LinkButton href="/register" variant="ghost" size="lg" className="w-full">
                   Регистрация
                 </LinkButton>
               </div>
@@ -179,5 +241,25 @@ export function Navbar() {
         </div>
       )}
     </header>
+  );
+}
+
+function MenuLink({
+  href,
+  icon: Icon,
+  children,
+}: {
+  href: string;
+  icon: React.ComponentType<{ size?: number }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      role="menuitem"
+      href={href}
+      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-surface"
+    >
+      <Icon size={16} /> {children}
+    </Link>
   );
 }

@@ -69,13 +69,13 @@ export function NotificationsBell() {
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-2 max-h-96 w-80 overflow-y-auto rounded-lg border border-border bg-white shadow-lg scrollbar-thin">
+        <div className="absolute right-0 z-40 mt-2 max-h-96 w-80 overflow-y-auto rounded-xl border border-border bg-card shadow-lg scrollbar-thin">
           <div className="border-b border-border p-3 text-sm font-semibold">Уведомления</div>
           {notifications.length === 0 ? (
             <div className="p-4 text-sm text-muted">Пока нет уведомлений</div>

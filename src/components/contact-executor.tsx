@@ -44,7 +44,7 @@ export function ContactExecutorButtons({ executorUserId }: { executorUserId: str
       >
         <Briefcase size={16} /> {loading === "offer" ? "Открываем чат..." : "Предложить работу"}
       </Button>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="text-sm text-danger-text">{error}</p>}
     </div>
   );
 }
