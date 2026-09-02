@@ -7,6 +7,8 @@ import { CategoryCard } from "@/components/category-card";
 import { JobRow } from "@/components/job-card";
 import { ExecutorCard } from "@/components/executor-card";
 import { HeroSearch } from "@/components/hero-search";
+import { HeroBlueprint, PlanFragment } from "@/components/blueprint/hero-blueprint";
+import { ArchitecturalBackground } from "@/components/blueprint/architectural-background";
 import { ProcessSteps } from "@/components/process-steps";
 import { LinkButton } from "@/components/ui/link-button";
 import { SectionHeading } from "@/components/ui/card";
@@ -54,8 +56,24 @@ export default async function HomePage() {
       {/* ---------- Hero ---------- */}
       <section className="relative overflow-hidden bg-primary text-white">
         <div className="blueprint-grid pointer-events-none absolute inset-0" aria-hidden />
+
+        {/* Architectural line work — decorative, desktop only. Anchored just
+            outside the 896px content column (calc(50% ± 470px)) so it can never
+            reach the headline or the search bar at any viewport width, and
+            simply bleeds further off-screen as the window narrows. */}
+        <div className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block" aria-hidden>
+          <HeroBlueprint className="bp-reveal-drift absolute left-[calc(50%+470px)] top-1/2 w-[34rem] -translate-y-1/2 text-white/[0.07]" />
+          <PlanFragment className="bp-reveal absolute bottom-6 right-[calc(50%+470px)] w-80 text-white/[0.05]" />
+        </div>
+
         <div
           className="pointer-events-none absolute -right-32 -top-32 h-[26rem] w-[26rem] rounded-full bg-accent/15 blur-3xl"
+          aria-hidden
+        />
+
+        {/* Vignette that lifts the headline and search out of the line work. */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_45%,rgb(17_24_39/0.85)_0%,rgb(17_24_39/0.55)_45%,transparent_75%)]"
           aria-hidden
         />
 
@@ -137,8 +155,9 @@ export default async function HomePage() {
       </section>
 
       {/* ---------- Categories, grouped ---------- */}
-      <section className="border-t border-border bg-card py-14 sm:py-16">
-        <div className="container-page">
+      <section className="relative border-t border-border bg-card py-14 sm:py-16">
+        <ArchitecturalBackground intensity="medium" showPlan />
+        <div className="container-page relative">
           <SectionHeading
             title="Найдите специалиста по направлению"
             subtitle="Все направления строительной отрасли — от документации до работ на объекте"
@@ -197,8 +216,9 @@ export default async function HomePage() {
       )}
 
       {/* ---------- Why StroyHub ---------- */}
-      <section className="border-y border-border bg-card py-14 sm:py-16">
-        <div className="container-page">
+      <section className="relative border-y border-border bg-card py-14 sm:py-16">
+        <ArchitecturalBackground intensity="subtle" />
+        <div className="container-page relative">
           <SectionHeading
             title="Почему выбирают СтройХаб"
             subtitle="Площадка построена вокруг того, как реально устроены строительные заказы"
@@ -265,8 +285,9 @@ export default async function HomePage() {
       )}
 
       {/* ---------- How it works ---------- */}
-      <section id="how-it-works" className="border-t border-border bg-card py-14 sm:py-16">
-        <div className="container-page">
+      <section id="how-it-works" className="relative border-t border-border bg-card py-14 sm:py-16">
+        <ArchitecturalBackground intensity="faint" />
+        <div className="container-page relative">
           <SectionHeading
             title="Как это работает"
             subtitle="Четыре шага от задачи до результата"
@@ -287,6 +308,8 @@ export default async function HomePage() {
       <section className="container-page py-14 sm:py-16">
         <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-12 text-center text-white sm:px-12 sm:py-16">
           <div className="blueprint-grid pointer-events-none absolute inset-0" aria-hidden />
+          <PlanFragment className="pointer-events-none absolute -left-10 top-1/2 hidden w-64 -translate-y-1/2 text-white/[0.06] lg:block" />
+          <HeroBlueprint className="bp-drift pointer-events-none absolute -right-12 top-1/2 hidden w-72 -translate-y-1/2 text-white/[0.06] lg:block" />
           <div
             className="pointer-events-none absolute -bottom-24 left-1/2 h-64 w-[32rem] -translate-x-1/2 rounded-full bg-accent/20 blur-3xl"
             aria-hidden

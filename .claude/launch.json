@@ -6,6 +6,24 @@
       "runtimeExecutable": "C:\\Users\\Азат\\stroyhub\\dev-server.cmd",
       "runtimeArgs": [],
       "port": 3000
+    },
+    {
+      "name": "detective-client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/Азат/detective-mystery/client", "run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "detective-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/Азат/detective-mystery/server", "run", "dev"],
+      "port": 4000
+    },
+    {
+      "name": "heist-planner",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/Азат/heist-planner", "run", "dev", "--", "-p", "3010"],
+      "port": 3010
     }
   ]
 }

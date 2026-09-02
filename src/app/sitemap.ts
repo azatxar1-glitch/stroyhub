@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { projects as ktProjects } from "@/data/kamtehnostroy";
 
 const siteUrl = process.env.AUTH_URL ?? "https://stroyhub.vercel.app";
 
@@ -13,6 +14,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/categories`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteUrl}/how-it-works`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${siteUrl}/register`, changeFrequency: "monthly", priority: 0.4 },
+    // Корпоративный сайт ООО «КАМТЕХНОСТРОЙ» — отдельный раздел со своей оболочкой.
+    { url: `${siteUrl}/kamtehnostroy`, changeFrequency: "monthly", priority: 0.9 },
+    ...ktProjects.map((project) => ({
+      url: `${siteUrl}/kamtehnostroy/objects/${project.id}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
   ];
 
   try {

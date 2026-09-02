@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileTabBar } from "@/components/mobile-tabbar";
+import { SiteChrome, SiteMain } from "@/components/site-chrome";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -74,12 +75,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           >
             Перейти к содержимому
           </a>
-          <Navbar />
-          <main id="main" className="flex-1 pb-safe-tabbar">
-            {children}
-          </main>
-          <Footer />
-          <MobileTabBar />
+          <SiteChrome>
+            <Navbar />
+          </SiteChrome>
+          <SiteMain>{children}</SiteMain>
+          <SiteChrome>
+            <Footer />
+            <MobileTabBar />
+          </SiteChrome>
         </Providers>
       </body>
     </html>

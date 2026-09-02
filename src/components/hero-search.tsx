@@ -27,7 +27,9 @@ export function HeroSearch({ cities }: { cities: string[] }) {
   return (
     <form
       onSubmit={submit}
-      className="rounded-2xl border border-white/10 bg-white p-2.5 shadow-[0_24px_60px_-24px_rgb(0_0_0/0.6)]"
+      // A thin light ring plus a deep shadow keeps the search bar reading as the
+      // foreground object, separated from the blueprint texture behind it.
+      className="rounded-2xl bg-white p-2.5 ring-1 ring-white/15 shadow-[0_0_0_6px_rgb(255_255_255/0.04),0_28px_64px_-28px_rgb(0_0_0/0.75)]"
     >
       <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
         <div className="flex flex-1 items-center gap-3 rounded-xl px-3.5 py-1 lg:py-0">

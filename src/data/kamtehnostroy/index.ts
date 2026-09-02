@@ -1,0 +1,12 @@
+export { company, isPlaceholder } from "./company";
+export type { Company } from "./company";
+export { services, servicesTitle, servicesNote } from "./services";
+export type { Service } from "./services";
+export { projects, featuredProject, projectsTitle, projectsNote } from "./projects";
+export type { Project } from "./projects";
+export { processSteps, processTitle } from "./process";
+export type { ProcessStep } from "./process";
+export { advantages, advantagesTitle } from "./advantages";
+export type { Advantage } from "./advantages";
+export { gallery, galleryCategories } from "./gallery";
+export type { GalleryItem, GalleryCategory } from "./gallery";
