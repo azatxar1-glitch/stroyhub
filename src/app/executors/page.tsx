@@ -121,6 +121,9 @@ export default async function ExecutorsPage({ searchParams }: { searchParams: Pr
     sp.registered,
   ].filter(Boolean).length;
 
+  /* Пустая выдача читается по-разному: «ничего не нашлось» против «пока никого нет». */
+  const isFiltered = activeCount > 0 || Boolean(sp.q);
+
   const filterFields = (
     <>
       <input type="hidden" name="q" value={sp.q ?? ""} />
@@ -268,17 +271,32 @@ export default async function ExecutorsPage({ searchParams }: { searchParams: Pr
           </div>
 
           {executors.length === 0 ? (
-            <EmptyState
-              icon={UserSearch}
-              title="Специалисты не найдены"
-              description="Под выбранные фильтры пока никто не подходит. Попробуйте расширить критерии или разместите заявку — исполнители откликнутся сами."
-              action={<LinkButton href="/jobs/new">Создать заявку</LinkButton>}
-              secondaryAction={
-                <LinkButton href="/executors" variant="outline">
-                  Сбросить фильтры
-                </LinkButton>
-              }
-            />
+            isFiltered ? (
+              <EmptyState
+                icon={UserSearch}
+                title="Специалисты не найдены"
+                description="Под выбранные фильтры пока никто не подходит. Попробуйте расширить критерии или разместите заявку — исполнители откликнутся сами."
+                action={<LinkButton href="/jobs/new">Создать заявку</LinkButton>}
+                secondaryAction={
+                  <LinkButton href="/executors" variant="outline">
+                    Сбросить фильтры
+                  </LinkButton>
+                }
+              />
+            ) : (
+              /* Пустой каталог — не результат фильтрации, а состояние площадки. */
+              <EmptyState
+                icon={UserSearch}
+                title="Каталог пока пуст"
+                description="Специалисты только начинают заполнять профили. Разместите заявку — она будет видна всем, кто зарегистрируется, и вы получите отклики."
+                action={<LinkButton href="/jobs/new">Создать заявку</LinkButton>}
+                secondaryAction={
+                  <LinkButton href="/register" variant="outline">
+                    Я специалист
+                  </LinkButton>
+                }
+              />
+            )
           ) : (
             <>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">

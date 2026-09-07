@@ -87,6 +87,9 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
 
   const activeCount = [sp.category, sp.city, sp.locationType, sp.budgetMin, sp.budgetMax].filter(Boolean).length;
 
+  /* Пустая лента читается по-разному: «ничего не нашлось» против «заявок ещё нет». */
+  const isFiltered = activeCount > 0 || Boolean(sp.q);
+
   const filterFields = (
     <>
       <input type="hidden" name="q" value={sp.q ?? ""} />
@@ -203,16 +206,31 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
           </div>
 
           {jobs.length === 0 ? (
-            <EmptyState
-              icon={FileSearch}
-              title="Заявок не найдено"
-              description="Под выбранные фильтры пока нет открытых заявок. Новые задачи публикуются регулярно — попробуйте расширить критерии."
-              action={
-                <LinkButton href="/jobs" variant="outline">
-                  Сбросить фильтры
-                </LinkButton>
-              }
-            />
+            isFiltered ? (
+              <EmptyState
+                icon={FileSearch}
+                title="Заявок не найдено"
+                description="Под выбранные фильтры пока нет открытых заявок. Новые задачи публикуются регулярно — попробуйте расширить критерии."
+                action={
+                  <LinkButton href="/jobs" variant="outline">
+                    Сбросить фильтры
+                  </LinkButton>
+                }
+              />
+            ) : (
+              /* Лента пуста не из-за фильтров, а потому что заявок ещё не размещали. */
+              <EmptyState
+                icon={FileSearch}
+                title="Открытых заявок пока нет"
+                description="Заказчики ещё не разместили задачи. Заполните профиль — когда появится подходящая заявка, вы сможете откликнуться первым."
+                action={<LinkButton href="/dashboard/profile">Заполнить профиль</LinkButton>}
+                secondaryAction={
+                  <LinkButton href="/jobs/new" variant="outline">
+                    Разместить заявку
+                  </LinkButton>
+                }
+              />
+            )
           ) : (
             <>
               <div className="space-y-3.5">
