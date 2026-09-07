@@ -44,9 +44,11 @@ export function Footer() {
       </div>
 
       <div className="border-t border-border">
-        <div className="container-page flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted sm:flex-row">
+        <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-xs text-muted sm:flex-row">
           <span>© {new Date().getFullYear()} СтройХаб</span>
-          <span>Строительные специалисты и услуги в одном месте</span>
+          <Link href="/privacy" className="transition-colors hover:text-accent-text">
+            Политика конфиденциальности
+          </Link>
         </div>
       </div>
     </footer>

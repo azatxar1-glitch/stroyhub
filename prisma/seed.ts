@@ -1,9 +1,39 @@
+import { randomBytes } from "crypto";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-const DEMO_PASSWORD = "password123";
+/**
+ * Пароль демо-аккаунтов. Не хранится в репозитории: берётся из окружения,
+ * а если переменная не задана — генерируется случайный и печатается один
+ * раз в конце. Так готовые учётные записи с общим паролем (включая админа)
+ * не могут утечь вместе с кодом.
+ */
+const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? randomBytes(9).toString("base64url");
+
+/**
+ * Сид полностью очищает базу, поэтому запускать его на боевой БД нельзя.
+ * Явное подтверждение через `SEED_ALLOW_DESTRUCTIVE=yes` защищает от того,
+ * чтобы случайно снести продакшен, если в .env оказалась продакшен-строка.
+ */
+function assertSafeTarget() {
+  const url = process.env.DATABASE_URL ?? "";
+  const isLocal = url.includes("localhost") || url.includes("127.0.0.1") || url.startsWith("file:");
+  if (isLocal || process.env.SEED_ALLOW_DESTRUCTIVE === "yes") return;
+
+  console.error(
+    [
+      "",
+      "Отказ: DATABASE_URL указывает на удалённую базу, а сид удаляет все данные.",
+      "Если вы точно хотите пересоздать именно эту базу, запустите так:",
+      "",
+      "  SEED_ALLOW_DESTRUCTIVE=yes npm run db:seed",
+      "",
+    ].join("\n")
+  );
+  process.exit(1);
+}
 
 const CATEGORIES = [
   { name: "ПТО", slug: "pto", icon: "ClipboardList" },
@@ -32,6 +62,8 @@ const CATEGORIES = [
 ];
 
 async function main() {
+  assertSafeTarget();
+
   console.log("Очистка базы данных...");
   await prisma.$transaction([
     prisma.review.deleteMany(),
@@ -583,13 +615,17 @@ async function main() {
   }
 
   console.log("Готово!");
-  console.log("—".repeat(50));
-  console.log(`Админ:        ${admin.email} / ${DEMO_PASSWORD}`);
-  console.log(`Заказчики:    ivan@stroyhub.ru, kapitalstroy@stroyhub.ru / ${DEMO_PASSWORD}`);
-  console.log(
-    `Исполнители:  alexey@stroyhub.ru, sergey@stroyhub.ru, dmitry@stroyhub.ru, olga@stroyhub.ru, maxim@stroyhub.ru, natalia@stroyhub.ru, igor@stroyhub.ru / ${DEMO_PASSWORD}`
-  );
-  console.log("—".repeat(50));
+  console.log("—".repeat(60));
+  console.log("Демо-аккаунты (только для локальной разработки):");
+  console.log(`  Админ:       ${admin.email}`);
+  console.log("  Заказчики:   ivan@stroyhub.ru, kapitalstroy@stroyhub.ru");
+  console.log("  Исполнители: alexey@, sergey@, dmitry@, olga@, maxim@, natalia@, igor@stroyhub.ru");
+  console.log("");
+  console.log(`  Пароль:      ${DEMO_PASSWORD}`);
+  if (!process.env.SEED_PASSWORD) {
+    console.log("               (сгенерирован случайно — задайте SEED_PASSWORD, чтобы закрепить)");
+  }
+  console.log("—".repeat(60));
 }
 
 main()

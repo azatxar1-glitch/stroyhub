@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   const {
     register,
@@ -134,7 +135,27 @@ export default function RegisterPage() {
             </p>
           )}
 
-          <Button type="submit" size="lg" className="w-full" disabled={loading}>
+          {/* Согласие на обработку ПД должно быть явным действием, а не галочкой по умолчанию. */}
+          <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-muted">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-strong accent-[#f97316]"
+            />
+            <span>
+              Согласен на обработку персональных данных и принимаю{" "}
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="font-semibold text-accent-text hover:underline"
+              >
+                политику конфиденциальности
+              </Link>
+            </span>
+          </label>
+
+          <Button type="submit" size="lg" className="w-full" disabled={loading || !consent}>
             {loading ? "Создаём аккаунт…" : "Зарегистрироваться"}
           </Button>
 
