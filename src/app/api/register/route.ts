@@ -3,9 +3,14 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations";
 import { handleApiError } from "@/lib/api-utils";
+import { rateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    // Регистрация создаёт записи в базе — без лимита её можно завалить ботами.
+    const limit = rateLimit(clientKey(req, "register"), 5, 60 * 60 * 1000);
+    if (!limit.allowed) return tooManyRequests(limit.retryAfter);
+
     const body = await req.json();
     const data = registerSchema.parse(body);
 

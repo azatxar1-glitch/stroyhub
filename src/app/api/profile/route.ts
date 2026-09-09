@@ -18,6 +18,9 @@ export async function PATCH(req: NextRequest) {
         city: data.city || null,
         bio: data.bio || null,
         ...(data.avatarUrl ? { avatarUrl: data.avatarUrl } : {}),
+        ...(data.emailNotifications !== undefined
+          ? { emailNotifications: data.emailNotifications }
+          : {}),
       },
     });
 
@@ -28,6 +31,7 @@ export async function PATCH(req: NextRequest) {
       city: updated.city,
       bio: updated.bio,
       avatarUrl: updated.avatarUrl,
+      emailNotifications: updated.emailNotifications,
     });
   } catch (error) {
     return handleApiError(error);

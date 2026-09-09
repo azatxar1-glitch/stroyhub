@@ -21,6 +21,7 @@ export function ProfileForm({ user }: { user: User }) {
   const router = useRouter();
   const { update } = useSession();
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
+  const [emailNotifications, setEmailNotifications] = useState(user.emailNotifications);
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -61,7 +62,7 @@ export function ProfileForm({ user }: { user: User }) {
       const res = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, avatarUrl }),
+        body: JSON.stringify({ ...data, avatarUrl, emailNotifications }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -111,6 +112,27 @@ export function ProfileForm({ user }: { user: User }) {
       <div>
         <Label htmlFor="bio">О себе</Label>
         <Textarea id="bio" rows={4} placeholder="Расскажите о своём опыте..." {...register("bio")} />
+      </div>
+
+      <div className="border-t border-border pt-5">
+        <Label className="mb-3">Уведомления</Label>
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-4 transition-colors hover:border-border-strong has-checked:border-accent has-checked:bg-accent-soft">
+          {/* Управляем состоянием сами: react-hook-form не подхватывает
+              булево значение из defaultValues для одиночного чекбокса. */}
+          <input
+            type="checkbox"
+            checked={emailNotifications}
+            onChange={(e) => setEmailNotifications(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-strong accent-[#f97316]"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-foreground">Письма на почту</span>
+            <span className="mt-0.5 block text-sm text-muted">
+              Об откликах, сообщениях и смене статуса заказа. Уведомления внутри сайта приходят
+              в любом случае.
+            </span>
+          </span>
+        </label>
       </div>
 
       {serverError && <p className="text-sm text-danger-text">{serverError}</p>}

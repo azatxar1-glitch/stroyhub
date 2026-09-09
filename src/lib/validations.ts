@@ -61,6 +61,7 @@ export const userProfileSchema = z.object({
   city: z.string().max(100).optional().or(z.literal("")),
   bio: z.string().max(2000).optional().or(z.literal("")),
   avatarUrl: z.string().optional().or(z.literal("")),
+  emailNotifications: z.boolean().optional(),
 });
 
 export const portfolioItemSchema = z.object({
