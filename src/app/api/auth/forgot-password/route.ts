@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, emailLayout } from "@/lib/email";
 import { rateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit";
 import { handleApiError } from "@/lib/api-utils";
+import { absoluteUrl } from "@/lib/site";
 
 const schema = z.object({ email: z.string().email("Некорректный email") });
 
@@ -41,8 +42,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      const origin = process.env.AUTH_URL ?? new URL(req.url).origin;
-      const url = `${origin}/reset-password?token=${token}`;
+      // Через absoluteUrl, а не AUTH_URL: эта переменная нужна next-auth
+      // и легко отстаёт от реального домена, а ссылка из письма ведёт
+      // человека на сайт — промахнуться ей нельзя.
+      const url = absoluteUrl(`/reset-password?token=${token}`);
 
       await sendEmail({
         to: user.email,

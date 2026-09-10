@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, emailLayout } from "@/lib/email";
+import { absoluteUrl } from "@/lib/site";
 
 /** Типы, о которых имеет смысл писать на почту. */
 const EMAILED_TYPES = new Set([
@@ -70,8 +71,7 @@ async function sendNotificationEmail(params: {
 
   if (!user || user.isBlocked || !user.emailNotifications) return;
 
-  const origin = process.env.AUTH_URL ?? "https://stroyhub-g5g5.vercel.app";
-  const url = params.link ? `${origin}${params.link}` : `${origin}/dashboard`;
+  const url = absoluteUrl(params.link ?? "/dashboard");
 
   await sendEmail({
     to: user.email,
