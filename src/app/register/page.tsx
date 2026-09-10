@@ -7,11 +7,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { Search, Briefcase, Check } from "lucide-react";
-import { registerSchema, type RegisterInput } from "@/lib/validations";
+import { registerFormSchema, type RegisterFormInput } from "@/lib/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
+import { PasswordStrength } from "@/components/password-strength";
+import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import { cn } from "@/lib/utils";
 
 export default function RegisterPage() {
@@ -26,21 +28,22 @@ export default function RegisterPage() {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<RegisterFormInput>({
+    resolver: zodResolver(registerFormSchema),
     defaultValues: { role: "CUSTOMER" },
   });
 
   const role = watch("role");
+  const password = watch("password");
 
-  async function onSubmit(data: RegisterInput) {
+  async function onSubmit(data: RegisterFormInput) {
     setServerError(null);
     setLoading(true);
     try {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, consent }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -114,16 +117,17 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <Label htmlFor="password" hint="минимум 6 символов">
+            <Label htmlFor="password" hint={`минимум ${MIN_PASSWORD_LENGTH} символов`}>
               Пароль
             </Label>
             <Input
               id="password"
               type="password"
               autoComplete="new-password"
-              placeholder="••••••"
+              placeholder="••••••••"
               {...register("password")}
             />
+            <PasswordStrength value={password ?? ""} />
             {errors.password && (
               <p className="mt-1.5 text-xs font-medium text-danger-text">{errors.password.message}</p>
             )}
@@ -144,7 +148,15 @@ export default function RegisterPage() {
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-strong accent-[#f97316]"
             />
             <span>
-              Согласен на обработку персональных данных и принимаю{" "}
+              Принимаю{" "}
+              <Link
+                href="/terms"
+                target="_blank"
+                className="font-semibold text-accent-text hover:underline"
+              >
+                пользовательское соглашение
+              </Link>{" "}
+              и{" "}
               <Link
                 href="/privacy"
                 target="_blank"
@@ -152,6 +164,7 @@ export default function RegisterPage() {
               >
                 политику конфиденциальности
               </Link>
+              , согласен на обработку персональных данных
             </span>
           </label>
 

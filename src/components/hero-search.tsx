@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Wifi } from "lucide-react";
+import { CITIES } from "@/lib/cities";
 import { cn } from "@/lib/utils";
 
 /**
  * The primary entry point of the whole product: one query, an optional city,
  * and a remote toggle — all funnelled into the existing /executors filters.
  */
-export function HeroSearch({ cities }: { cities: string[] }) {
+export function HeroSearch() {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [city, setCity] = useState("");
   const [remote, setRemote] = useState(false);
+  const cityListId = useId();
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,19 +54,22 @@ export function HeroSearch({ cities }: { cities: string[] }) {
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
               aria-hidden
             />
-            <select
+            {/* Справочник городов, а не список из существующих профилей:
+                на старте профилей нет и выбрать было бы нечего. */}
+            <input
+              list={cityListId}
               value={city}
               onChange={(e) => setCity(e.target.value)}
+              placeholder="Любой город"
               aria-label="Город"
-              className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-9 pr-8 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10 lg:border-transparent"
-            >
-              <option value="">Любой город</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+              autoComplete="off"
+              className="h-12 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm text-foreground placeholder:text-faint focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10 lg:border-transparent"
+            />
+            <datalist id={cityListId}>
+              {CITIES.map((c) => (
+                <option key={c} value={c} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           <button

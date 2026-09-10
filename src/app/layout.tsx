@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileTabBar } from "@/components/mobile-tabbar";
+import { siteUrl, isProduction } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -12,7 +13,6 @@ const inter = Inter({
   display: "swap",
 });
 
-const siteUrl = process.env.AUTH_URL ?? "https://stroyhub.vercel.app";
 const description =
   "СтройХаб — специализированный маркетплейс строительной отрасли. Найдите ПТО, сметчика, проектировщика, прораба, технадзор или бригаду: рейтинг, отзывы, портфолио и отклики с ценой и сроком.";
 
@@ -41,7 +41,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    url: siteUrl,
+    // "./" — относительно текущего пути, поэтому og:url у каждой страницы свой.
+    url: "./",
     siteName: "СтройХаб",
     title: "СтройХаб — специалисты и услуги строительной отрасли",
     description,
@@ -51,10 +52,12 @@ export const metadata: Metadata = {
     title: "СтройХаб — специалисты и услуги строительной отрасли",
     description,
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  alternates: { canonical: "./" },
+  // Превью-деплои не должны индексироваться: иначе в выдаче появятся дубли
+  // основного сайта, конкурирующие с ним за те же запросы.
+  robots: isProduction
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

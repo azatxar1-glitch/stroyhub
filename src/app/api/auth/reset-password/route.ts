@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { passwordSchema } from "@/lib/validations";
 import { rateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit";
 import { handleApiError } from "@/lib/api-utils";
 
 const schema = z.object({
   token: z.string().min(1, "Ссылка недействительна"),
-  password: z.string().min(6, "Минимум 6 символов"),
+  password: passwordSchema,
 });
 
 export async function POST(req: NextRequest) {

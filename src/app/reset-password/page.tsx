@@ -12,10 +12,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
+import { PasswordStrength } from "@/components/password-strength";
+import { MIN_PASSWORD_LENGTH, checkPassword } from "@/lib/password";
 
 const schema = z
   .object({
-    password: z.string().min(6, "Минимум 6 символов"),
+    password: z
+      .string()
+      .min(MIN_PASSWORD_LENGTH, `Минимум ${MIN_PASSWORD_LENGTH} символов`)
+      .refine((v) => checkPassword(v).score > 0, {
+        message: "Такой пароль слишком простой — придумайте другой",
+      }),
     confirm: z.string().min(1, "Повторите пароль"),
   })
   .refine((v) => v.password === v.confirm, {
@@ -35,6 +42,7 @@ function ResetPasswordForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<FormInput>({ resolver: zodResolver(schema) });
 
@@ -107,7 +115,7 @@ function ResetPasswordForm() {
             className="space-y-5 rounded-2xl border border-border bg-card p-6"
           >
             <div>
-              <Label htmlFor="password" hint="минимум 6 символов">
+              <Label htmlFor="password" hint={`минимум ${MIN_PASSWORD_LENGTH} символов`}>
                 Новый пароль
               </Label>
               <Input
@@ -115,9 +123,10 @@ function ResetPasswordForm() {
                 type="password"
                 autoComplete="new-password"
                 autoFocus
-                placeholder="••••••"
+                placeholder="••••••••"
                 {...register("password")}
               />
+              <PasswordStrength value={watch("password") ?? ""} />
               {errors.password && (
                 <p className="mt-1.5 text-xs font-medium text-danger-text">
                   {errors.password.message}

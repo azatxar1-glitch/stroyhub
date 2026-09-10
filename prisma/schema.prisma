@@ -29,6 +29,12 @@ model User {
   /// Письма об откликах, сообщениях и статусах заказа. Уведомления внутри
   /// сайта приходят всегда — выключается только почта.
   emailNotifications Boolean @default(true)
+
+  /// Согласие на обработку персональных данных: когда дано и под какой
+  /// редакцией документов. Без даты и версии согласие нечем подтвердить,
+  /// если документы поменяются.
+  consentAt        DateTime?
+  consentVersion   String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -96,6 +102,24 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+/// Подписка на появление заявок по направлению.
+///
+/// Нужна на старте, пока в категории нет ни исполнителей, ни заказов:
+/// страница не превращается в тупик, а собирает контакты тех, кому эта
+/// категория интересна.
+model CategoryLead {
+  id         String   @id @default(cuid())
+  email      String
+  categoryId String
+  createdAt  DateTime @default(now())
+  notifiedAt DateTime?
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([email, categoryId])
+  @@index([categoryId])
+}
+
 /// Сброс пароля. В базе лежит только SHA-256 от токена: утечка таблицы
 /// не даёт возможности сбросить чужой пароль. Токен одноразовый —
 /// после использования проставляется usedAt.
@@ -123,6 +147,7 @@ model Category {
 
   jobs             Job[]
   executorProfiles ExecutorProfile[]
+  leads            CategoryLead[]
 }
 
 model Skill {

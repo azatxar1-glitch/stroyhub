@@ -1,3 +1,5 @@
+import { plural as pluralForm } from "@/lib/plural";
+
 /**
  * Trust signals are derived strictly from data we actually store — no
  * placeholder or invented verification. Each signal states the rule it
@@ -108,10 +110,12 @@ function pluralWorks(n: number) {
   return plural(n, "работа", "работы", "работ");
 }
 
+/**
+ * Совместимая обёртка: раньше плюрализация жила здесь и вызывалась в
+ * десятке мест с четырьмя аргументами. Алгоритм переехал в lib/plural.ts
+ * (он покрыт тестами), а эта форма вызова осталась, чтобы не переписывать
+ * все точки использования.
+ */
 export function plural(n: number, one: string, few: string, many: string) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
-  return many;
+  return pluralForm(n, [one, few, many]);
 }

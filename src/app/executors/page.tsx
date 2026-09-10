@@ -8,6 +8,7 @@ import { Pagination } from "@/components/pagination";
 import { EmptyState } from "@/components/empty-state";
 import { FilterShell, FilterGroup } from "@/components/filters/filter-shell";
 import { SortSelect } from "@/components/filters/sort-select";
+import { CityInput } from "@/components/filters/city-input";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { LinkButton } from "@/components/ui/link-button";
@@ -88,7 +89,7 @@ export default async function ExecutorsPage({ searchParams }: { searchParams: Pr
   }
   if (andFilters.length) where.AND = andFilters;
 
-  const [executors, total, categories, cities] = await Promise.all([
+  const [executors, total, categories] = await Promise.all([
     prisma.executorProfile.findMany({
       where,
       include: {
@@ -102,12 +103,6 @@ export default async function ExecutorsPage({ searchParams }: { searchParams: Pr
     }),
     prisma.executorProfile.count({ where }),
     prisma.category.findMany({ orderBy: { order: "asc" } }),
-    prisma.user.findMany({
-      where: { role: "EXECUTOR", city: { not: null } },
-      select: { city: true },
-      distinct: ["city"],
-      orderBy: { city: "asc" },
-    }),
   ]);
 
   const activeCount = [
@@ -141,14 +136,9 @@ export default async function ExecutorsPage({ searchParams }: { searchParams: Pr
       </FilterGroup>
 
       <FilterGroup label="Город">
-        <Select name="city" defaultValue={sp.city ?? ""} aria-label="Город">
-          <option value="">Любой город</option>
-          {cities.map((c) => (
-            <option key={c.city} value={c.city!}>
-              {c.city}
-            </option>
-          ))}
-        </Select>
+        {/* Справочник, а не города из существующих профилей: иначе на
+            пустой площадке фильтровать нечем. */}
+        <CityInput defaultValue={sp.city ?? ""} />
       </FilterGroup>
 
       <FilterGroup label="Формат работы">

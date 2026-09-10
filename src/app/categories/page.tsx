@@ -6,6 +6,7 @@ import { CATEGORIES } from "@/lib/constants";
 import { groupCategories } from "@/lib/category-groups";
 import { CategoryCard } from "@/components/category-card";
 import { LinkButton } from "@/components/ui/link-button";
+import { pluralize, FORMS } from "@/lib/plural";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,9 @@ export default async function CategoriesPage() {
                 <h2 className="text-lg font-bold tracking-tight text-foreground">{group.title}</h2>
                 <p className="mt-1 text-sm text-muted">{group.caption}</p>
               </div>
-              <span className="text-sm text-faint">{group.items.length} направлений</span>
+              <span className="text-sm text-faint">
+                {pluralize(group.items.length, FORMS.direction)}
+              </span>
             </div>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {group.items.map((cat) => (

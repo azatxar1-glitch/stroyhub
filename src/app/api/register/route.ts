@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations";
 import { handleApiError } from "@/lib/api-utils";
 import { rateLimit, clientKey, tooManyRequests } from "@/lib/rate-limit";
+import { LEGAL_VERSION } from "@/lib/legal";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +29,10 @@ export async function POST(req: NextRequest) {
         email,
         passwordHash,
         role: data.role,
+        // Фиксируем момент и редакцию документов: без этого невозможно
+        // показать, с чем именно человек согласился.
+        consentAt: new Date(),
+        consentVersion: LEGAL_VERSION,
       },
     });
 

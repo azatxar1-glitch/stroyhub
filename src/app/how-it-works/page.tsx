@@ -109,8 +109,8 @@ export default function HowItWorksPage() {
             },
             {
               icon: ShieldCheck,
-              title: "История в одном месте",
-              text: "Отклики, переписка и смена статусов фиксируются на площадке и доступны обеим сторонам.",
+              title: "Вся история заказа в одном месте",
+              text: "Отклики, переписка и смена статусов фиксируются на площадке и доступны обеим сторонам — ничего не теряется в мессенджерах.",
             },
           ].map((item) => (
             <div key={item.title} className="rounded-2xl border border-border bg-card p-6">

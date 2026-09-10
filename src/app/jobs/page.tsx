@@ -8,6 +8,7 @@ import { Pagination } from "@/components/pagination";
 import { EmptyState } from "@/components/empty-state";
 import { FilterShell, FilterGroup } from "@/components/filters/filter-shell";
 import { SortSelect } from "@/components/filters/sort-select";
+import { CityInput } from "@/components/filters/city-input";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { LinkButton } from "@/components/ui/link-button";
@@ -67,7 +68,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
   }
   if (andFilters.length) where.AND = andFilters;
 
-  const [jobs, total, categories, cities] = await Promise.all([
+  const [jobs, total, categories] = await Promise.all([
     prisma.job.findMany({
       where,
       include: { category: true, _count: { select: { proposals: true } } },
@@ -77,12 +78,6 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
     }),
     prisma.job.count({ where }),
     prisma.category.findMany({ orderBy: { order: "asc" } }),
-    prisma.job.findMany({
-      where: { status: "OPEN" },
-      select: { city: true },
-      distinct: ["city"],
-      orderBy: { city: "asc" },
-    }),
   ]);
 
   const activeCount = [sp.category, sp.city, sp.locationType, sp.budgetMin, sp.budgetMax].filter(Boolean).length;
@@ -107,14 +102,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
       </FilterGroup>
 
       <FilterGroup label="Город">
-        <Select name="city" defaultValue={sp.city ?? ""} aria-label="Город">
-          <option value="">Любой город</option>
-          {cities.map((c) => (
-            <option key={c.city} value={c.city}>
-              {c.city}
-            </option>
-          ))}
-        </Select>
+        <CityInput defaultValue={sp.city ?? ""} />
       </FilterGroup>
 
       <FilterGroup label="Формат работы">

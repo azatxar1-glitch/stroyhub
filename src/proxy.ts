@@ -4,7 +4,7 @@ import { authConfig } from "@/lib/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const CUSTOMER_ONLY = ["/jobs/new"];
+const CUSTOMER_ONLY = ["/jobs/new", "/dashboard/jobs"];
 const EXECUTOR_ONLY = ["/dashboard/proposals", "/dashboard/portfolio"];
 const ADMIN_ONLY = ["/admin"];
 const AUTH_REQUIRED_PREFIXES = ["/dashboard", "/messages", "/admin", "/jobs/new"];
@@ -26,12 +26,15 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
-  if (isLoggedIn && CUSTOMER_ONLY.some((p) => pathname.startsWith(p)) && role !== "CUSTOMER") {
-    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
-  }
+  // Роль не та — но человек залогинен, и выкидывать его на главную значит
+  // терять контекст. Возвращаем в кабинет: там показан набор разделов,
+  // который ему действительно доступен.
+  const wrongRole =
+    (CUSTOMER_ONLY.some((p) => pathname.startsWith(p)) && role !== "CUSTOMER") ||
+    (EXECUTOR_ONLY.some((p) => pathname.startsWith(p)) && role !== "EXECUTOR");
 
-  if (isLoggedIn && EXECUTOR_ONLY.some((p) => pathname.startsWith(p)) && role !== "EXECUTOR") {
-    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+  if (isLoggedIn && wrongRole) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 
   return NextResponse.next();

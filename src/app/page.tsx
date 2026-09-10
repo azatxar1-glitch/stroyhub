@@ -16,7 +16,7 @@ import { SectionHeading } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, recentJobs, topExecutors, executorCities, categoryCounts] = await Promise.all([
+  const [categories, recentJobs, topExecutors, categoryCounts] = await Promise.all([
     prisma.category.findMany({ orderBy: { order: "asc" } }),
     prisma.job.findMany({
       where: { status: "OPEN" },
@@ -33,12 +33,6 @@ export default async function HomePage() {
         skills: { include: { skill: true } },
       },
     }),
-    prisma.user.findMany({
-      where: { role: "EXECUTOR", city: { not: null } },
-      select: { city: true },
-      distinct: ["city"],
-      orderBy: { city: "asc" },
-    }),
     prisma.executorProfile.groupBy({ by: ["categoryId"], _count: { _all: true } }),
   ]);
 
@@ -47,7 +41,6 @@ export default async function HomePage() {
   const groups = groupCategories(
     categoryList.map((c) => ({ ...c, count: countByCategory.get(c.id) ?? 0 }))
   );
-  const cities = executorCities.map((c) => c.city!).filter(Boolean);
   const bySlug = new Map(categoryList.map((c) => [c.slug, c]));
   const popular = POPULAR_SEARCH_SLUGS.map((s) => bySlug.get(s)).filter(Boolean);
 
@@ -94,7 +87,7 @@ export default async function HomePage() {
           </div>
 
           <div className="mx-auto mt-9 max-w-4xl">
-            <HeroSearch cities={cities} />
+            <HeroSearch />
 
             {popular.length > 0 && (
               <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
@@ -237,8 +230,8 @@ export default async function HomePage() {
               },
               {
                 icon: ShieldCheck,
-                title: "Безопасное взаимодействие",
-                text: "Переписка, отклики и статусы заказа фиксируются на площадке, а не теряются в мессенджерах.",
+                title: "Вся история заказа в одном месте",
+                text: "Отклики, переписка и смена статусов фиксируются на площадке и доступны обеим сторонам — ничего не теряется в мессенджерах.",
               },
               {
                 icon: HardHat,

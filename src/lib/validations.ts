@@ -1,14 +1,40 @@
 import { z } from "zod";
+import { MIN_PASSWORD_LENGTH, checkPassword } from "@/lib/password";
+
+/**
+ * Правила пароля живут в одном месте: та же проверка выполняется и в
+ * браузере, и на сервере, поэтому обойти её через прямой запрос к API
+ * не получится.
+ */
+export const passwordSchema = z
+  .string()
+  .min(MIN_PASSWORD_LENGTH, `Минимум ${MIN_PASSWORD_LENGTH} символов`)
+  .refine((value) => checkPassword(value).score > 0, {
+    message: "Такой пароль слишком простой — придумайте другой",
+  });
 
 export const registerSchema = z
   .object({
     name: z.string().min(2, "Введите имя (минимум 2 символа)").max(100),
     email: z.string().email("Некорректный email"),
-    password: z.string().min(6, "Минимум 6 символов"),
+    password: passwordSchema,
     role: z.enum(["CUSTOMER", "EXECUTOR"]),
+    // Согласие проверяется и на сервере: галочку в браузере можно обойти
+    // прямым запросом к API, а согласие обязано быть осознанным действием.
+    consent: z.literal(true, {
+      message: "Нужно принять условия, чтобы зарегистрироваться",
+    }),
   })
   .strict();
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+/**
+ * Схема формы регистрации. Согласие в неё не входит: в интерфейсе это
+ * отдельная галочка, которая блокирует кнопку, а на сервере проверяется
+ * полной схемой выше.
+ */
+export const registerFormSchema = registerSchema.omit({ consent: true });
+export type RegisterFormInput = z.infer<typeof registerFormSchema>;
 
 export const loginSchema = z.object({
   email: z.string().email("Некорректный email"),
