@@ -135,7 +135,7 @@ export function FilterGroup({
 }) {
   return (
     <fieldset className={cn("border-0 p-0", className)}>
-      <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-faint">{label}</legend>
+      <legend className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">{label}</legend>
       {children}
     </fieldset>
   );

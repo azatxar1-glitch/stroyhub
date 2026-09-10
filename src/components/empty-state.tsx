@@ -27,7 +27,10 @@ export function EmptyState({
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface">
         <Icon size={24} className="text-muted" aria-hidden />
       </div>
-      <h3 className="text-base font-bold text-foreground">{title}</h3>
+      {/* h2, а не h3: на узком экране боковые фильтры со своим h2 скрыты,
+          и заголовок пустого состояния оказывается первым после h1 — с h3
+          получался пропуск уровня. */}
+      <h2 className="text-base font-bold text-foreground">{title}</h2>
       {description && <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">{description}</p>}
       {(action || secondaryAction) && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

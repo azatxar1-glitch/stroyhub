@@ -66,7 +66,10 @@ export function Footer() {
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h4 className="mb-3.5 text-xs font-bold uppercase tracking-wider text-faint">{title}</h4>
+      {/* h2, а не h4: подвал идёт после контента страницы, а там верхний
+          уровень — h2, и h4 давал пропуск. Размер задаётся классами, от
+          уровня заголовка он не зависит. */}
+      <h2 className="mb-3.5 text-xs font-bold uppercase tracking-wider text-muted">{title}</h2>
       <ul className="space-y-2.5">{children}</ul>
     </div>
   );

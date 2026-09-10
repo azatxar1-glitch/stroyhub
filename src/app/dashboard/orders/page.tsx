@@ -103,7 +103,7 @@ function OrderGroup({
 }) {
   return (
     <section>
-      <h2 className="mb-3.5 text-xs font-bold uppercase tracking-wider text-faint">
+      <h2 className="mb-3.5 text-xs font-bold uppercase tracking-wider text-muted">
         {title} ({orders.length})
       </h2>
       <ul className="space-y-3.5">
