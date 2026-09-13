@@ -40,7 +40,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: job.title,
     description: job.description.slice(0, 160),
-    openGraph: { title: `${job.title} · СтройХаб`, description: job.description.slice(0, 160) },
   };
 }
 

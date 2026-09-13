@@ -40,10 +40,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${profile.user.name} — ${profile.category.name}`,
     description: profile.headline,
-    openGraph: {
-      title: `${profile.user.name} — ${profile.category.name} · СтройХаб`,
-      description: profile.headline,
-    },
   };
 }
 

@@ -2,46 +2,51 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Wordmark + a construction-crane glyph. Drawn inline so it stays crisp,
- * inherits color, and costs no extra request.
+ * Wordmark + the brand cube mark. Drawn inline so it stays crisp, follows the
+ * palette, and costs no extra request.
+ *
+ * Знак повторяет public/logo.svg из фирменного набора. Обводка идёт
+ * currentColor, а грань — var(--accent): при смене палитры логотип поедет
+ * за ней сам, отдельной правки не потребуется.
  */
 export function Logo({ className, onDark = false }: { className?: string; onDark?: boolean }) {
   return (
     <Link href="/" className={cn("flex items-center gap-2.5", className)} aria-label="СтройХаб — на главную">
-      <span
-        className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-xl",
-          onDark ? "bg-white/10 text-accent" : "bg-primary text-accent"
-        )}
-      >
-        <CraneGlyph />
-      </span>
+      <CubeMark className={cn("h-9 w-9 shrink-0", onDark ? "text-white" : "text-foreground")} />
       <span
         className={cn(
           "text-[17px] font-extrabold leading-none tracking-tight",
           onDark ? "text-white" : "text-foreground"
         )}
       >
+        {/* На светлом фоне «Хаб» идёт затемнённым оранжевым: чистый #f97316
+            даёт 2.8:1 и читается плохо. */}
         Строй<span className={onDark ? "text-accent" : "text-accent-text"}>Хаб</span>
       </span>
     </Link>
   );
 }
 
-function CraneGlyph() {
+function CubeMark({ className }: { className?: string }) {
   return (
-    <svg width="19" height="19" viewBox="0 0 20 20" fill="none" aria-hidden>
-      {/* mast */}
-      <path d="M8 18V5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      {/* jib */}
-      <path d="M3 5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      {/* counter-jib brace */}
-      <path d="M8 5 4.5 8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.65" />
-      {/* hoist line + load */}
-      <path d="M14.5 5v3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <rect x="12.8" y="8.5" width="3.4" height="3" rx="0.8" fill="currentColor" />
-      {/* base */}
-      <path d="M5 18h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <svg viewBox="0 0 48 48" className={className} fill="none" aria-hidden>
+      <path d="M24,8 L37.86,16 L37.86,32 L24,24 Z" fill="var(--accent)" />
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.6"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      >
+        <path d="M24,8 L37.86,16 L37.86,32 L24,40 L10.14,32 L10.14,16 Z" />
+        <path d="M24,8 L24,24 M24,24 L10.14,32 M24,24 L37.86,32" />
+      </g>
+      <g fill="currentColor">
+        <circle cx="24" cy="24" r="2.9" />
+        <circle cx="24" cy="8" r="2.9" />
+        <circle cx="10.14" cy="32" r="2.9" />
+        <circle cx="37.86" cy="32" r="2.9" />
+      </g>
     </svg>
   );
 }
