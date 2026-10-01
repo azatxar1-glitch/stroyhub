@@ -3,8 +3,10 @@
 import { useRef, useState } from "react";
 import { Paperclip, X, Loader2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { uploadFile, type UploadedFile } from "@/lib/upload-client";
+import { MAX_UPLOAD_SIZE, formatSize } from "@/lib/uploads";
 
-export type UploadedFile = { url: string; filename: string; type: string };
+export type { UploadedFile };
 
 export function FileUploader({
   value,
@@ -21,6 +23,7 @@ export function FileUploader({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleFiles(fileList: FileList | null) {
@@ -30,18 +33,17 @@ export function FileUploader({
     try {
       const uploaded: UploadedFile[] = [];
       for (const file of Array.from(fileList)) {
-        const form = new FormData();
-        form.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: form });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Не удалось загрузить файл");
-        uploaded.push(data);
+        // Процент нужен не для красоты: проектная документация занимает
+        // десятки мегабайт, и без него непонятно, идёт ли дело вообще.
+        setProgress(null);
+        uploaded.push(await uploadFile(file, (percentage) => setProgress(Math.round(percentage))));
       }
       onChange(multiple ? [...value, ...uploaded] : uploaded);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setUploading(false);
+      setProgress(null);
       if (inputRef.current) inputRef.current.value = "";
     }
   }
@@ -62,9 +64,13 @@ export function FileUploader({
           <Upload size={24} className="text-muted" aria-hidden />
         )}
         <span className="text-sm font-semibold text-foreground">
-          {uploading ? "Загрузка…" : "Нажмите, чтобы выбрать файлы"}
+          {uploading
+            ? progress === null
+              ? "Загрузка…"
+              : `Загрузка… ${progress}%`
+            : "Нажмите, чтобы выбрать файлы"}
         </span>
-        {hint && <span className="text-xs text-muted">{hint}</span>}
+        <span className="text-xs text-muted">{hint ?? `До ${formatSize(MAX_UPLOAD_SIZE)} на файл`}</span>
         <input
           ref={inputRef}
           type="file"

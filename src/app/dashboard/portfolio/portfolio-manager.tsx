@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { uploadFile } from "@/lib/upload-client";
 
 export function PortfolioManager({ items }: { items: PortfolioItem[] }) {
   const router = useRouter();
@@ -22,13 +23,15 @@ export function PortfolioManager({ items }: { items: PortfolioItem[] }) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleUpload(file: File) {
+    setError(null);
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      const data = await res.json();
-      if (res.ok) setImageUrl(data.url);
+      const uploaded = await uploadFile(file);
+      setImageUrl(uploaded.url);
+    } catch (e) {
+      // Молчаливый отказ здесь особенно обиден: форма выглядит рабочей,
+      // но сохранить работу без изображения всё равно не даст.
+      setError(e instanceof Error ? e.message : "Не удалось загрузить изображение");
     } finally {
       setUploading(false);
     }

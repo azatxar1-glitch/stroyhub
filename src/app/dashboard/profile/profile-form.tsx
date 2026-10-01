@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { CheckCircle2 } from "lucide-react";
+import { uploadFile } from "@/lib/upload-client";
 
 type ProfileInput = z.infer<typeof userProfileSchema>;
 
@@ -42,13 +43,15 @@ export function ProfileForm({ user }: { user: User }) {
   });
 
   async function handleAvatarChange(file: File) {
+    setServerError(null);
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      const data = await res.json();
-      if (res.ok) setAvatarUrl(data.url);
+      const uploaded = await uploadFile(file);
+      setAvatarUrl(uploaded.url);
+    } catch (e) {
+      // Раньше ошибка проглатывалась: аватар просто не менялся, и человек
+      // не понимал, то ли файл не подошёл, то ли ничего не произошло.
+      setServerError(e instanceof Error ? e.message : "Не удалось загрузить файл");
     } finally {
       setUploading(false);
     }
