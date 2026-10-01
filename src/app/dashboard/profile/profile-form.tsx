@@ -138,7 +138,11 @@ export function ProfileForm({ user }: { user: User }) {
         </label>
       </div>
 
-      {serverError && <p className="text-sm text-danger-text">{serverError}</p>}
+      {serverError && (
+        <p role="alert" className="text-sm text-danger-text">
+          {serverError}
+        </p>
+      )}
       {saved && (
         <p className="flex items-center gap-1.5 text-sm text-success-text">
           <CheckCircle2 size={15} /> Сохранено

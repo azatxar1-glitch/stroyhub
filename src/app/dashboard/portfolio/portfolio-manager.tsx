@@ -134,7 +134,13 @@ export function PortfolioManager({ items }: { items: PortfolioItem[] }) {
             <Label htmlFor="pf-desc">Описание</Label>
             <Textarea id="pf-desc" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
-          {error && <p className="text-sm text-danger-text">{error}</p>}
+          {/* role="alert": иначе программа чтения с экрана промолчит, а причина
+              отказа — единственное, что подскажет, что делать дальше. */}
+          {error && (
+            <p role="alert" className="text-sm text-danger-text">
+              {error}
+            </p>
+          )}
           <Button className="w-full" onClick={save} disabled={saving}>
             {saving ? "Сохранение..." : "Добавить"}
           </Button>
