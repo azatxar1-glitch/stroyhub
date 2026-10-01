@@ -45,9 +45,11 @@ export default function ContactsPage() {
           </h2>
           <dl className="mt-4 space-y-2.5 rounded-2xl border border-border bg-card p-6">
             <Row label="Наименование" value={operator.legalName} />
-            <Row label="ИНН" value={operator.inn} />
+            {/* ИНН, ОГРН и адрес есть не у всякого оператора: у физлица их
+                нет, и пустая строка выглядела бы недостающим реквизитом. */}
+            {operator.inn && <Row label="ИНН" value={operator.inn} />}
             {operator.ogrn && <Row label="ОГРН" value={operator.ogrn} />}
-            <Row label="Адрес" value={operator.address} />
+            {operator.address && <Row label="Адрес" value={operator.address} />}
             <Row label="Email для обращений" value={operator.email} />
           </dl>
         </section>

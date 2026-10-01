@@ -26,9 +26,9 @@ export default function PrivacyPage() {
           {hasOperatorDetails() ? (
             <dl className="space-y-2">
               <Row label="Оператор" value={operator.legalName} />
-              <Row label="ИНН" value={operator.inn} />
+              {operator.inn && <Row label="ИНН" value={operator.inn} />}
               {operator.ogrn && <Row label="ОГРН" value={operator.ogrn} />}
-              <Row label="Адрес" value={operator.address} />
+              {operator.address && <Row label="Адрес" value={operator.address} />}
               <Row label="Для обращений" value={operator.email} />
               {operator.phone && <Row label="Телефон" value={operator.phone} />}
             </dl>
