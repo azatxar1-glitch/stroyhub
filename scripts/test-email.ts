@@ -7,6 +7,7 @@
  * Без RESEND_API_KEY письмо уйдёт в консоль (это штатный режим разработки).
  */
 import { sendEmail, emailLayout, isEmailConfigured } from "../src/lib/email";
+import { siteUrl } from "@/lib/site";
 
 async function main() {
   const to = process.argv[2];
@@ -36,7 +37,7 @@ async function main() {
         "Это тестовое письмо СтройХаба.",
         "Если вы его видите — отправка работает: уведомления об откликах и ссылки восстановления пароля будут доходить до пользователей.",
       ],
-      action: { label: "Открыть СтройХаб", url: process.env.AUTH_URL ?? "https://stroyhub-g5g5.vercel.app" },
+      action: { label: "Открыть СтройХаб", url: siteUrl },
       footer: "Письмо отправлено скриптом scripts/test-email.ts.",
     }),
   });
