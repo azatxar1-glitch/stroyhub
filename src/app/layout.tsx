@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { MobileTabBar } from "@/components/mobile-tabbar";
+import { Analytics } from "@/components/analytics";
 import { siteUrl, isProduction } from "@/lib/site";
 
 const inter = Inter({
@@ -91,6 +92,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Footer />
           <MobileTabBar />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
