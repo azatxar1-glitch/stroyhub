@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { metricaCounterId } from "@/lib/analytics";
 
 /**
  * Яндекс Метрика.
@@ -16,13 +17,7 @@ import { useEffect, useRef } from "react";
  * вводит в формы, а здесь это переписка, адреса объектов и контакты.
  */
 
-const counterId = process.env.NEXT_PUBLIC_YANDEX_METRICA_ID;
-
-declare global {
-  interface Window {
-    ym?: (id: number, action: string, ...args: unknown[]) => void;
-  }
-}
+const counterId = metricaCounterId;
 
 export function Analytics() {
   const pathname = usePathname();

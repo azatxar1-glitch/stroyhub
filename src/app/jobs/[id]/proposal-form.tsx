@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { LinkButton } from "@/components/ui/link-button";
+import { reachGoal, GOALS } from "@/lib/analytics";
 
 export function ProposalForm({ jobId, alreadyApplied }: { jobId: string; alreadyApplied: boolean }) {
   const router = useRouter();
@@ -42,6 +43,7 @@ export function ProposalForm({ jobId, alreadyApplied }: { jobId: string; already
         setServerError(body.error ?? "Не удалось отправить отклик");
         return;
       }
+      reachGoal(GOALS.proposalSent);
       setDone(true);
       router.refresh();
     } catch {

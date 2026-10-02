@@ -15,6 +15,7 @@ import { Logo } from "@/components/logo";
 import { PasswordStrength } from "@/components/password-strength";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import { cn } from "@/lib/utils";
+import { reachGoal, GOALS } from "@/lib/analytics";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,6 +51,8 @@ export default function RegisterPage() {
         setServerError(body.error ?? "Ошибка регистрации");
         return;
       }
+      reachGoal(GOALS.signup, { role: data.role });
+
       const signInRes = await signIn("credentials", {
         email: data.email,
         password: data.password,

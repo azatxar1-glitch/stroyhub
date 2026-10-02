@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { CategoryIcon } from "@/components/category-icon";
 import { FileUploader, type UploadedFile } from "@/components/file-uploader";
 import { formatMoney, cn } from "@/lib/utils";
+import { reachGoal, GOALS } from "@/lib/analytics";
 
 type FormInput = z.input<typeof jobCreateSchema>;
 type FieldName = keyof FormInput;
@@ -83,6 +84,7 @@ export function CreateJobWizard({ categories }: { categories: Category[] }) {
         setServerError(body.error ?? "Не удалось опубликовать заявку");
         return;
       }
+      reachGoal(GOALS.jobCreated);
       router.push(`/jobs/${body.id}`);
       router.refresh();
     } catch {
