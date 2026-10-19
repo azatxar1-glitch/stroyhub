@@ -303,8 +303,8 @@ class GamblingTest(Base):
     def test_cushion_base_excludes_gambling(self):
         self.tx(date="2026-09-10", kind="expense", amount="20000", category_id=self.cat("Продукты и питание"))
         self.tx(date="2026-09-11", kind="expense", amount="50000", category_id=self.cat("Азартные игры"))
-        # 3 полных месяца (июль–сентябрь): (20 000 + 50 000 − 50 000) / 3
-        self.assertEqual(calc.expense_base(self.conn, REF), 2000000 // 3)
+        # 3 полных месяца (июль–сентябрь): среднее расходов 70 000 / 3 минус среднее игр 50 000 / 3
+        self.assertEqual(calc.expense_base(self.conn, REF), 7000000 // 3 - 5000000 // 3)
 
     def test_new_category_added_to_existing_db(self):
         self.conn.execute("DELETE FROM categories WHERE name='Азартные игры'")
