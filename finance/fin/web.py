@@ -580,11 +580,14 @@ def p_plan(conn, q):
     today_ = date.today()
     default = calc.month_bounds(calc.ym(calc.add_months(today_.replace(day=1), 1)))[1].isoformat()
     until = q.get("until") or default
+    basis = q.get("basis") if q.get("basis") in ("auto", "history", "budget") else "auto"
     try:
-        body = md(reports.plan(conn, until).split("\n", 1)[1])
+        body = md(reports.plan(conn, until, basis=basis).split("\n", 1)[1])
     except ValueError as e:
-        body, until = f'<div class="msg err">{h(e)}</div>', default
+        body = f'<div class="msg err">{h(e)}</div>'
+    bases = [("auto", "траты: авто"), ("history", "если ничего не менять (история)"), ("budget", "по бюджету (цель)")]
     form = (f'<form class="row box" method="get">{field("План до", "until", until, "date")}'
+            f'<label style="max-width:300px">Повседневные траты{select("basis", bases, basis)}</label>'
             f'<button class="sec">Пересчитать</button></form>')
     return "План денег по датам", form + body
 

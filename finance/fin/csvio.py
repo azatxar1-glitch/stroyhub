@@ -13,11 +13,12 @@ from . import backup, db, ops
 from .money import to_plain
 
 TX_COLUMNS = ["date", "kind", "status", "amount", "account", "to_account", "category", "subcategory",
-              "debt", "principal", "receivable", "goal", "description"]
+              "debt", "principal", "receivable", "goal", "description", "recurring"]
 TX_HEADERS_RU = {
     "date": "Дата", "kind": "Вид", "status": "Статус", "amount": "Сумма", "account": "Счёт",
     "to_account": "Счёт зачисления", "category": "Категория", "subcategory": "Подкатегория", "debt": "Долг",
     "principal": "Основной долг", "receivable": "Дебитор", "goal": "Цель", "description": "Описание",
+    "recurring": "Обязательный платёж",
 }
 _RU_TO_KEY = {v.lower(): k for k, v in TX_HEADERS_RU.items()}
 _KIND_ALIASES = {v.lower(): k for k, v in db.TX_KINDS.items()} | {"доход": "income", "расход": "expense",
@@ -35,10 +36,11 @@ def _write(rows, header):
 
 
 def export_transactions(conn, start=None, end=None) -> str:
-    q = """SELECT t.*, a.name acc, ta.name to_acc, c.name cat, d.name debt, r.name rcv, g.name goal
+    q = """SELECT t.*, a.name acc, ta.name to_acc, c.name cat, d.name debt, r.name rcv, g.name goal, rc.name rec
            FROM transactions t LEFT JOIN accounts a ON a.id=t.account_id LEFT JOIN accounts ta ON ta.id=t.to_account_id
            LEFT JOIN categories c ON c.id=t.category_id LEFT JOIN debts d ON d.id=t.debt_id
-           LEFT JOIN receivables r ON r.id=t.receivable_id LEFT JOIN goals g ON g.id=t.goal_id WHERE 1=1"""
+           LEFT JOIN receivables r ON r.id=t.receivable_id LEFT JOIN goals g ON g.id=t.goal_id
+           LEFT JOIN recurring rc ON rc.id=t.recurring_id WHERE 1=1"""
     params = []
     if start:
         q += " AND t.date>=?"
@@ -52,7 +54,7 @@ def export_transactions(conn, start=None, end=None) -> str:
         rows.append([t["date"], db.TX_KINDS[t["kind"]], db.TX_STATUSES[t["status"]], to_plain(t["amount"]), t["acc"] or "", t["to_acc"] or "",
                      "" if auto_cat else (t["cat"] or ""), t["subcategory"], t["debt"] or "",
                      to_plain(t["principal"]) if t["principal"] is not None else "", t["rcv"] or "",
-                     t["goal"] or "", t["description"]])
+                     t["goal"] or "", t["description"], t["rec"] or ""])
     return _write(rows, [TX_HEADERS_RU[c] for c in TX_COLUMNS])
 
 
@@ -118,7 +120,7 @@ def _lookup(conn, table, name, label, extra=""):
 
 
 _FP_FIELDS = ("date", "kind", "status", "amount", "account_id", "to_account_id", "category_id", "debt_id",
-              "principal", "receivable_id", "description")
+              "principal", "receivable_id", "description", "recurring_id")
 
 
 def _existing_count(conn, tx):
@@ -157,6 +159,7 @@ def import_transactions(conn, text: str, dry_run=False) -> dict:
                 "principal": rec.get("principal") or None,
                 "receivable_id": _lookup(conn, "receivables", rec.get("receivable"), "Дебитор"),
                 "goal_id": _lookup(conn, "goals", rec.get("goal"), "Цель"),
+                "recurring_id": _lookup(conn, "recurring", rec.get("recurring"), "Обязательный платёж"),
                 "description": rec.get("description"),
             }
             if kind in ("income", "expense") and (data["amount"] or "").lstrip().startswith("-"):

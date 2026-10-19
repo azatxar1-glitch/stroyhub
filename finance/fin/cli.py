@@ -145,6 +145,8 @@ def build_parser():
     s = sub.add_parser("plan", help="план денег по датам через несколько выплат")
     s.add_argument("until", help="до даты ГГГГ-ММ-ДД")
     s.add_argument("--date", help="начальная дата")
+    s.add_argument("--basis", default="auto", choices=["auto", "history", "budget"],
+                   help="траты: history — как сейчас, budget — по бюджету (цель)")
 
     s = sub.add_parser("budget", help="/budget — бюджет на месяц")
     s.add_argument("--month", help="ГГГГ-ММ")
@@ -200,7 +202,7 @@ def main(argv=None):
         elif a.cmd == "forecast":
             print(reports.forecast(conn, _ref(a)))
         elif a.cmd == "plan":
-            print(reports.plan(conn, a.until, _ref(a)))
+            print(reports.plan(conn, a.until, _ref(a), a.basis))
         elif a.cmd == "goals":
             print(reports.goals(conn, _ref(a)))
         elif a.cmd == "audit":

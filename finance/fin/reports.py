@@ -138,8 +138,8 @@ def forecast(conn, ref=None):
     return "\n".join(L)
 
 
-def plan(conn, until, ref=None):
-    p = calc.cash_plan(conn, until, ref)
+def plan(conn, until, ref=None, basis="auto"):
+    p = calc.cash_plan(conn, until, ref, basis)
     L = [f"## План денег с {p['ref']} по {p['until']}", "",
          "Ожидаемые доходы здесь учитываются **как план** (если придут вовремя и в полной сумме). "
          "Это не доступные деньги: колонка «если доходы не придут» показывает, когда закончатся реальные деньги.", ""]
@@ -156,7 +156,8 @@ def plan(conn, until, ref=None):
     L += ["", f"- Старт: {fmt(p['start'])}",
           f"- + ожидаемые доходы (план): {fmt(p['income'])}",
           f"- − обязательные платежи и плановые расходы: {fmt(p['obligations'])}",
-          f"- − повседневные траты: {life}",
+          f"- − повседневные траты: {life}" + (" — если продолжать тратить, как в последние 60 дней"
+                                                if p["life_basis"] == "история трат" else ""),
           f"- **= остаток на {p['until']}: {fmt(p['end'])}** "
           f"({fmt(p['start'])} + {fmt(p['income'])} − {fmt(p['obligations'])} − {fmt(p['life'])})",
           f"- Минимальный остаток: **{fmt(p['low']['balance'])}** ({p['low']['date']})",

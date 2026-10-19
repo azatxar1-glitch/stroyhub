@@ -196,6 +196,9 @@ class PlanTest(Base):
         self.assertEqual(p["end"], 5300000 + 10695000 - 11700000 - 4300000)
         # без зарплат: 53 000 − 30 000 − 6 × 1 000 = 17 000 к 24.10; 25.10 −16 000 → 1 000; 27.10 → −1 000
         self.assertEqual(p["cash_only_negative"], "2026-10-27")
+        with self.assertRaises(ValueError):
+            calc.cash_plan(self.conn, "2026-11-30", REF, basis="history")   # истории нет
+        self.assertEqual(calc.cash_plan(self.conn, "2026-11-30", REF, basis="budget")["end"], p["end"])
         # ожидаемые доходы не стали деньгами
         self.assertEqual(calc.balance_sheet(self.conn, REF)["liquid"], 5300000)
 
@@ -357,6 +360,18 @@ class DataTest(Base):
         twins = "Дата;Вид;Сумма;Счёт;Категория\n2026-10-13;Расход;250;Карта;Прочее\n2026-10-13;Расход;250;Карта;Прочее\n"
         self.assertEqual(csvio.import_transactions(self.conn, twins)["added"], 2)
         self.assertEqual(csvio.import_transactions(self.conn, twins)["added"], 0)
+
+    def test_recurring_link_survives_csv(self):
+        rid = ops.save_recurring(self.conn, {"name": "Ипотека", "amount": "17000", "day": "18",
+                                             "category_id": self.cat("Ипотека и жильё"), "start_date": "2026-09-01"})
+        self.tx(date="2026-09-17", kind="expense", amount="17000", category_id=self.cat("Ипотека и жильё"),
+                recurring_id=rid)
+        text = csvio.export_transactions(self.conn)
+        self.assertIn(";Ипотека", text)
+        self.conn.execute("DELETE FROM transactions")
+        self.conn.commit()
+        self.assertEqual(csvio.import_transactions(self.conn, text)["added"], 1)
+        self.assertEqual(self.conn.execute("SELECT recurring_id FROM transactions").fetchone()[0], rid)
 
     def test_table_export_import(self):
         text = csvio.export_table(self.conn, "debts")

@@ -447,7 +447,7 @@ def daily_series(conn, ref=None, days_ahead=None):
     return out
 
 
-def cash_plan(conn, until, ref=None):
+def cash_plan(conn, until, ref=None, basis="auto"):
     """План денег по дням до даты `until` через несколько выплат.
 
     В отличие от forecast() учитывает ожидаемые доходы — но как ПЛАН: рядом всегда
@@ -469,7 +469,11 @@ def cash_plan(conn, until, ref=None):
             events.append({"date": e["date"], "name": e["description"] or e["category"] or "Доход",
                            "amount": e["amount"], "kind": "income"})
     events.sort(key=lambda e: (e["date"], e["kind"] != "income"))
-    spend = daily_spending(conn, ref)
+    if basis not in ("auto", "history", "budget"):
+        raise ValueError("basis: auto, history или budget")
+    spend = daily_spending(conn, ref) if basis != "budget" else None
+    if basis == "history" and spend is None:
+        raise ValueError("Для плана по истории нужно ≥ 14 дней истории расходов")
     budgets = {}
 
     def life_rate(d):
