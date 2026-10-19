@@ -74,6 +74,7 @@ EXPENSE_CATEGORIES = [
     ("Развитие и обучение", "regular"),
     ("Бизнес", "regular"),
     ("Накопления и инвестиции", "service"),
+    ("Азартные игры", "regular"),
     ("Прочее", "regular"),
 ]
 INCOME_CATEGORIES = [
@@ -88,6 +89,7 @@ CAT_INTEREST = "Кредиты и проценты"
 CAT_PERSONAL_DEBT = "Возврат личных долгов"
 CAT_SAVINGS = "Накопления и инвестиции"
 CAT_LEND_RETURN = "Возвраты долгов"
+CAT_GAMBLING = "Азартные игры"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -228,14 +230,16 @@ def connect(path=None) -> sqlite3.Connection:
 def init(conn: sqlite3.Connection) -> None:
     conn.executescript(SCHEMA)
     row = conn.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
+    with conn:
+        # категории добавляются и в уже существующие базы (новые категории в новых версиях)
+        for name, role in EXPENSE_CATEGORIES:
+            conn.execute("INSERT OR IGNORE INTO categories(name, kind, role) VALUES (?, 'expense', ?)", (name, role))
+        for name, role in INCOME_CATEGORIES:
+            conn.execute("INSERT OR IGNORE INTO categories(name, kind, role) VALUES (?, 'income', ?)", (name, role))
     if row is None:
         with conn:
             conn.execute("INSERT INTO meta VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),))
             conn.execute("INSERT INTO meta VALUES ('created', ?)", (date.today().isoformat(),))
-            for name, role in EXPENSE_CATEGORIES:
-                conn.execute("INSERT OR IGNORE INTO categories(name, kind, role) VALUES (?, 'expense', ?)", (name, role))
-            for name, role in INCOME_CATEGORIES:
-                conn.execute("INSERT OR IGNORE INTO categories(name, kind, role) VALUES (?, 'income', ?)", (name, role))
             for name, kind, target, months, prio, note in DEFAULT_GOALS:
                 conn.execute(
                     "INSERT INTO goals(name, kind, target, months, priority, note) VALUES (?,?,?,?,?,?)",

@@ -293,6 +293,26 @@ class TrackingTest(Base):
         self.assertEqual(g["eta"], "долги не внесены")
 
 
+class GamblingTest(Base):
+    def test_gambling_category_flagged(self):
+        self.tx(date="2026-10-05", kind="income", amount="50000", category_id=self.cat("Зарплата", "income"))
+        self.tx(date="2026-10-10", kind="expense", amount="5000", category_id=self.cat("Азартные игры"))
+        self.assertTrue(any("Азартные игры" in x for x in calc.leaks(self.conn, REF)))
+        self.assertTrue(calc.recommendations(self.conn, REF)[0].startswith("Азартные игры за 30 дней: 5"))
+
+    def test_cushion_base_excludes_gambling(self):
+        self.tx(date="2026-09-10", kind="expense", amount="20000", category_id=self.cat("Продукты и питание"))
+        self.tx(date="2026-09-11", kind="expense", amount="50000", category_id=self.cat("Азартные игры"))
+        # 3 полных месяца (июль–сентябрь): (20 000 + 50 000 − 50 000) / 3
+        self.assertEqual(calc.expense_base(self.conn, REF), 2000000 // 3)
+
+    def test_new_category_added_to_existing_db(self):
+        self.conn.execute("DELETE FROM categories WHERE name='Азартные игры'")
+        self.conn.commit()
+        db.init(self.conn)
+        self.assertTrue(self.cat("Азартные игры"))
+
+
 class PayoffTest(unittest.TestCase):
     def test_simple_payoff(self):
         d = [{"id": 1, "name": "A", "balance": 1_200_000, "rate": 0, "min_payment": 100_000, "priority": 5}]

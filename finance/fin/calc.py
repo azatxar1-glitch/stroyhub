@@ -199,6 +199,7 @@ def cash_flow(conn, start, end):
         "expenses_by_category": expenses,
         "expenses": sum(v["amount"] for v in expenses.values()),
         "essential": sum(v["amount"] for v in expenses.values() if v["role"] == "essential"),
+        "gambling": expenses.get(db.CAT_GAMBLING, {}).get("amount", 0),
         "interest": interest,
         "principal_bank": principal_bank,
         "principal_person": principal_person,
@@ -738,12 +739,13 @@ def month_budget(conn, month):
 # ------------------------------------------------------------------- цели
 
 def expense_base(conn, ref=None):
-    """Месячная база для подушки: средние (потребление + погашение тела долга)
-    за 3 полных месяца; если истории нет — обязательные платежи + бюджет месяца."""
+    """Месячная база для подушки: средние (потребление без азартных игр + погашение
+    тела долга) за 3 полных месяца; если истории нет — обязательные платежи + бюджет месяца."""
     e = avg_monthly(conn, "expenses", ref=ref)
     p = avg_monthly(conn, "principal", ref=ref)
     if e:
-        return e + (p or 0)
+        # подушка покрывает жизнь и обязательства, а не азартные игры
+        return e - (avg_monthly(conn, "gambling", ref=ref) or 0) + (p or 0)
     ref = ref or today()
     budget = conn.execute("""SELECT COALESCE(SUM(b.amount),0) FROM budgets b JOIN categories c ON c.id=b.category_id
                              WHERE b.month=? AND c.role<>'service'""", (ym(ref),)).fetchone()[0]
@@ -876,6 +878,10 @@ def leaks(conn, ref=None):
     """Утечки и что можно сократить без потери качества жизни."""
     ref = ref or today()
     out = []
+    g30 = _category_spent(conn, db.CAT_GAMBLING, ref - timedelta(days=30), ref)
+    if g30:
+        out.append(f"Азартные игры за 30 дней: {fmt(g30)} — самая дорогая утечка: это деньги, которые не вернутся "
+                   "и не дают ничего взамен")
     last = last_full_months(1, ref)[0]
     lf = month_flow(conn, last)["expenses_by_category"] if tracked_months(conn, [last]) else {}
     prev = [month_flow(conn, m)["expenses_by_category"] for m in tracked_months(conn, last_full_months(4, ref)[:3])]
@@ -906,6 +912,13 @@ def leaks(conn, ref=None):
     return out
 
 
+def _category_spent(conn, name, start, end):
+    """Расход по категории за период (без учёта отмен)."""
+    return conn.execute("""SELECT COALESCE(SUM(t.amount),0) FROM transactions t JOIN categories c ON c.id=t.category_id
+        WHERE c.name=? AND c.kind='expense' AND t.kind='expense' AND t.status='done' AND t.date BETWEEN ? AND ?""",
+                        (name, _iso(start), _iso(end))).fetchone()[0]
+
+
 def recommendations(conn, ref=None):
     """Короткие выводы финдиректора на основе данных (без выдуманных цифр)."""
     ref = ref or today()
@@ -914,6 +927,12 @@ def recommendations(conn, ref=None):
     bs = balance_sheet(conn, ref)
     if not bs["accounts"]:
         return ["Начните с внесения счетов с фактическими остатками на сегодня (раздел «Счета»)."]
+    g30 = _category_spent(conn, db.CAT_GAMBLING, ref - timedelta(days=30), ref)
+    if g30:
+        inc30 = cash_flow(conn, ref - timedelta(days=30), ref)["income"]
+        share = f" — это {g30 * 100 / inc30:.0f} % дохода за тот же период" if inc30 else ""
+        rec.append(f"Азартные игры за 30 дней: {fmt(g30)}{share}. Пока это продолжается, никакой план накоплений "
+                   "и погашения долгов не сработает. Первый шаг — заблокировать платежи букмекерам и казино во всех банках.")
     if f["late_income"]:
         rec.append(f"Есть просроченные ожидаемые поступления ({len(f['late_income'])}) — они НЕ учтены в деньгах. "
                    "Уточните даты или отметьте как полученные/отменённые.")
