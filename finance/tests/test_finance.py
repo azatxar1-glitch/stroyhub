@@ -158,6 +158,66 @@ class RulesTest(Base):
         self.assertEqual(calc.balance_sheet(self.conn, REF)["liquid"], 5300000 + 14800000)
 
 
+class ReceivableIncomeTest(Base):
+    def test_earned_income_closes_receivable(self):
+        r = ops.save_receivable(self.conn, {"debtor": "Работодатель", "amount_start": "13050", "start_date": "2026-10-01"})
+        before = calc.balance_sheet(self.conn, REF)["net_worth"]
+        self.tx(date="2026-10-15", kind="income", amount="13050", category_id=self.cat("Зарплата", "income"),
+                receivable_id=r)
+        bs = calc.balance_sheet(self.conn, REF)
+        self.assertEqual(calc.receivable_balance(self.conn, r, REF), 0)
+        self.assertEqual(bs["net_worth"], before)            # деньги пришли, дебиторка ушла
+        self.assertEqual(calc.cash_flow(self.conn, "2026-10-01", "2026-10-31")["income"], 1305000)  # это доход
+        with self.assertRaises(ops.ValidationError):
+            self.tx(date="2026-10-16", kind="income", amount="1", category_id=self.cat("Зарплата", "income"),
+                    receivable_id=r)
+        self.assertFalse(checks.has_errors(checks.run(self.conn, REF)))
+
+
+class PlanTest(Base):
+    def test_multi_paycheck_plan(self):
+        # Без истории трат: «жизнь» по бюджету 31 000 ₽ в октябре и 30 000 ₽ в ноябре = 1 000 ₽/день
+        ops.set_budget(self.conn, "2026-10", self.cat("Продукты и питание"), "31000")
+        ops.set_budget(self.conn, "2026-11", self.cat("Продукты и питание"), "30000")
+        ops.save_recurring(self.conn, {"name": "Ипотека", "amount": "17000", "day": "18", "frequency": "monthly",
+                                       "category_id": self.cat("Ипотека и жильё"), "start_date": "2026-10-20"})
+        sal = self.cat("Зарплата", "income")
+        self.tx(date="2026-10-29", kind="income", status="planned", amount="13050", category_id=sal)
+        self.tx(date="2026-11-02", kind="income", status="planned", amount="93900", category_id=sal)
+        self.tx(date="2026-11-02", kind="debt_payment", status="planned", amount="40000", debt_id=self.friend)
+        p = calc.cash_plan(self.conn, "2026-11-30", REF)
+        # старт 53 000 (карта 50 000 + наличные 3 000). Доходы (план) 106 950.
+        # Обязательные: просрочка по кредиту за август и сентябрь 2 × 15 000 + кредит 25.10 и 25.11 2 × 15 000
+        # + Иван 40 000 + ипотека 18.11 17 000 = 117 000. Жизнь: 43 дня (19.10–30.11) × 1 000 = 43 000.
+        self.assertEqual(p["start"], 5300000)
+        self.assertEqual(p["income"], 10695000)
+        self.assertEqual(p["obligations"], 11700000)
+        self.assertEqual(p["life"], 4300000)
+        self.assertEqual(p["end"], 5300000 + 10695000 - 11700000 - 4300000)
+        # без зарплат: 53 000 − 30 000 − 6 × 1 000 = 17 000 к 24.10; 25.10 −16 000 → 1 000; 27.10 → −1 000
+        self.assertEqual(p["cash_only_negative"], "2026-10-27")
+        # ожидаемые доходы не стали деньгами
+        self.assertEqual(calc.balance_sheet(self.conn, REF)["liquid"], 5300000)
+
+
+class BudgetForecastTest(Base):
+    def test_gap_detected_from_budget_without_history(self):
+        self.conn.execute("UPDATE accounts SET opening_balance=0")
+        self.conn.execute("UPDATE debts SET closed=1 WHERE creditor_type='bank'")  # без просрочки по кредиту
+        self.conn.commit()
+        sal = self.cat("Зарплата", "income")
+        self.tx(date="2026-10-29", kind="income", status="planned", amount="13050", category_id=sal)
+        f = calc.forecast(self.conn, REF)
+        self.assertTrue(f["gap_unknown"])           # ни истории, ни бюджета — неизвестно, а не «всё хорошо»
+        self.assertFalse(f["cash_gap"])
+        ops.set_budget(self.conn, "2026-10", self.cat("Продукты и питание"), "31000")
+        f = calc.forecast(self.conn, REF)
+        self.assertEqual(f["spend_basis"], "budget")
+        self.assertEqual(f["projected_spend"], 10 * 100000)   # 10 дней × 1 000 ₽
+        self.assertTrue(f["cash_gap"])
+        self.assertEqual(calc.expense_base(self.conn, REF), 3100000)  # нет истории: обязательные (0) + бюджет
+
+
 class ForecastTest(Base):
     def test_forecast_until_next_income(self):
         ops.save_recurring(self.conn, {"name": "Аренда", "amount": "30000", "day": "1", "frequency": "monthly",

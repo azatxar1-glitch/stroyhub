@@ -105,7 +105,7 @@ def md(text):
 
 NAV = [("/", "Сводка"), ("/tx", "Операции"), ("/add", "+ Операция"), ("/accounts", "Счета"), ("/debts", "Долги"),
        ("/receivables", "Мне должны"), ("/recurring", "Платежи"), ("/budget", "Бюджет"), ("/salary", "Зарплата"),
-       ("/forecast", "Прогноз"), ("/goals", "Цели"), ("/report", "Отчёт"), ("/audit", "Аудит"),
+       ("/forecast", "Прогноз"), ("/plan", "План"), ("/goals", "Цели"), ("/report", "Отчёт"), ("/audit", "Аудит"),
        ("/income", "Рост дохода"), ("/data", "Данные")]
 
 CSS = """
@@ -236,7 +236,7 @@ def _options(conn):
 
 TX_JS = """<script>
 (function(){const f=document.getElementById('txf');if(!f)return;
-const show={income:['account','category','recurring_x','goal'],expense:['account','category','recurring','goal'],
+const show={income:['account','category','receivable','goal'],expense:['account','category','recurring','goal'],
 transfer:['account','to_account','goal'],debt_payment:['account','debt','principal'],debt_draw:['account','debt'],
 debt_adjust:['debt'],lend:['account','receivable'],lend_return:['account','receivable'],adjustment:['account']};
 function upd(){const k=f.kind.value;f.querySelectorAll('[data-f]').forEach(e=>{e.style.display=(show[k]||[]).includes(e.dataset.f)?'':'none'});
@@ -273,7 +273,9 @@ def tx_form(conn, q, tx=None):
 <div><button>{'Сохранить' if t else 'Добавить'}</button></div></form>
 <p class="muted">Сверка долга — если банк показывает другой остаток: положительная сумма увеличивает долг,
 отрицательная уменьшает. Корректировка счёта — разница с фактическим остатком или переоценка имущества (со знаком).
-Ожидаемая зарплата — «Доход» со статусом «Запланирована»: в деньги не входит, пока не отметите поступление.</p>{TX_JS}"""
+Ожидаемая зарплата — «Доход» со статусом «Запланирована»: в деньги не входит, пока не отметите поступление.
+Если пришла оплата, которую вам были должны (задержанная зарплата, долг заказчика), — «Доход» с выбранным «Кто должен»:
+это доход, и дебиторка уменьшится.</p>{TX_JS}"""
 
 
 def p_add(conn, q):
@@ -429,7 +431,8 @@ def p_receivables(conn, q):
 <label><span><input type="checkbox" name="closed" style="width:auto" {'checked' if e.get('closed') else ''}> закрыто</span></label>
 <div><button>Сохранить</button></div></form>
 <p class="muted">Дебиторка не входит в доступные деньги. Новый заём другу — операция «Дал в долг», возврат — «Мне вернули долг»
-(это не доход и не идёт в цель по доходу).</p>"""
+(это не доход и не идёт в цель по доходу). Заработанное, но не выплаченное (задержка зарплаты, долг заказчика) при оплате —
+операция «Доход» с выбранным дебитором: это доход, и долг перед вами уменьшится.</p>"""
     return "Мне должны", lst + form
 
 
@@ -573,6 +576,19 @@ def p_goals(conn, q):
     return "Финансовые цели", cards + form
 
 
+def p_plan(conn, q):
+    today_ = date.today()
+    default = calc.month_bounds(calc.ym(calc.add_months(today_.replace(day=1), 1)))[1].isoformat()
+    until = q.get("until") or default
+    try:
+        body = md(reports.plan(conn, until).split("\n", 1)[1])
+    except ValueError as e:
+        body, until = f'<div class="msg err">{h(e)}</div>', default
+    form = (f'<form class="row box" method="get">{field("План до", "until", until, "date")}'
+            f'<button class="sec">Пересчитать</button></form>')
+    return "План денег по датам", form + body
+
+
 def p_md(fn, title):
     def handler(conn, q):
         return title, md(fn(conn).split("\n", 1)[1])
@@ -582,7 +598,7 @@ def p_md(fn, title):
 GET_ROUTES = {
     "/": p_dashboard, "/add": p_add, "/tx": p_tx, "/accounts": p_accounts, "/debts": p_debts,
     "/receivables": p_receivables, "/recurring": p_recurring, "/budget": p_budget, "/report": p_report,
-    "/data": p_data, "/goals": p_goals,
+    "/data": p_data, "/goals": p_goals, "/plan": p_plan,
     "/salary": p_md(reports.salary, "Распределение зарплаты"),
     "/forecast": p_md(reports.forecast, "Прогноз денежного потока"),
     "/audit": p_md(reports.audit, "Аудит финансов"),

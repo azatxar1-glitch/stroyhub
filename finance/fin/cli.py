@@ -142,6 +142,10 @@ def build_parser():
         if name == "debts":
             s.add_argument("--extra", default="0", help="сумма сверх минимальных платежей в месяц")
 
+    s = sub.add_parser("plan", help="план денег по датам через несколько выплат")
+    s.add_argument("until", help="до даты ГГГГ-ММ-ДД")
+    s.add_argument("--date", help="начальная дата")
+
     s = sub.add_parser("budget", help="/budget — бюджет на месяц")
     s.add_argument("--month", help="ГГГГ-ММ")
     s.add_argument("--set", nargs=2, metavar=("КАТЕГОРИЯ", "СУММА"), action="append", help="задать лимит")
@@ -195,6 +199,8 @@ def main(argv=None):
             print(reports.salary(conn, _ref(a)))
         elif a.cmd == "forecast":
             print(reports.forecast(conn, _ref(a)))
+        elif a.cmd == "plan":
+            print(reports.plan(conn, a.until, _ref(a)))
         elif a.cmd == "goals":
             print(reports.goals(conn, _ref(a)))
         elif a.cmd == "audit":

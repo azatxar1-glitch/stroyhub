@@ -177,6 +177,11 @@ def clean_transaction(conn, data: dict) -> dict:
             else:
                 out["category_id"] = db.category_id(conn, db.CAT_INTEREST, "expense")
 
+    if kind == "income":
+        # оплата ранее заработанного (зарплата с задержкой, долг заказчика) — это доход,
+        # который одновременно закрывает дебиторку
+        rcv = _row(conn, "receivables", data.get("receivable_id"), "Дебитор")
+        out["receivable_id"] = rcv["id"] if rcv else None
     if kind in ("lend", "lend_return"):
         rcv = _row(conn, "receivables", data.get("receivable_id"), "Дебитор")
         if rcv is None:
@@ -202,7 +207,7 @@ def _check_limits(conn, tx: dict, exclude_id=None):
         bal = calc.debt_balance(conn, tx["debt_id"], exclude_tx=exclude_id)
         if bal + tx["amount"] < 0:
             raise ValidationError("После сверки долг стал бы отрицательным")
-    if tx["kind"] == "lend_return":
+    if tx["kind"] == "lend_return" or (tx["kind"] == "income" and tx["receivable_id"]):
         bal = calc.receivable_balance(conn, tx["receivable_id"], exclude_tx=exclude_id)
         if tx["amount"] > bal:
             raise ValidationError(f"Возврат больше, чем вам должны ({bal / 100:.2f} ₽)")

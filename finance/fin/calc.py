@@ -101,7 +101,8 @@ def receivable_balances(conn, as_of=None, only_id=None, exclude_tx=None):
         params.append(int(only_id))
     rows = conn.execute(f"""
         SELECT r.*, r.amount_start + COALESCE((
-            SELECT SUM(CASE t.kind WHEN 'lend' THEN t.amount WHEN 'lend_return' THEN -t.amount ELSE 0 END)
+            SELECT SUM(CASE t.kind WHEN 'lend' THEN t.amount WHEN 'lend_return' THEN -t.amount
+                                   WHEN 'income' THEN -t.amount ELSE 0 END)
             FROM transactions t WHERE t.receivable_id=r.id AND t.status='done' AND t.id<>?
               AND t.date>=r.start_date AND t.date<=?), 0) AS balance
         FROM receivables r WHERE {' AND '.join(where)} ORDER BY r.due_date IS NULL, r.due_date, r.name""",
@@ -327,7 +328,8 @@ def obligations(conn, start, end, ref=None):
                                AND t.date BETWEEN ? AND ?""", (start.isoformat(), end.isoformat())):
         if t["kind"] == "transfer":
             continue  # перевод на свои счета не уменьшает ваши деньги
-        items.append({"date": t["date"], "name": t["description"] or t["debt"] or t["category"] or "План",
+        label = ": ".join(x for x in (t["debt"], t["description"]) if x) or t["category"] or "План"
+        items.append({"date": t["date"], "name": label,
                       "amount": t["amount"], "paid": 0, "remaining": t["amount"], "source": "planned",
                       "ref_id": t["id"], "category": t["category"]})
     items.sort(key=lambda i: (i["date"], i["name"]))
@@ -379,6 +381,13 @@ def daily_spending(conn, ref=None, window=60):
             "essential": by_role.get("essential", 0) // days, "other": by_role.get("regular", 0) // days}
 
 
+def budget_daily(conn, d: date):
+    """Повседневные траты в день по месячным лимитам бюджета; None — лимиты не заданы."""
+    lim = conn.execute("""SELECT COALESCE(SUM(b.amount),0), COUNT(*) FROM budgets b
+        JOIN categories c ON c.id=b.category_id WHERE b.month=? AND c.role<>'service'""", (ym(d),)).fetchone()
+    return lim[0] // calendar.monthrange(d.year, d.month)[1] if lim[1] else None
+
+
 def forecast(conn, ref=None):
     ref = ref or today()
     bs = balance_sheet(conn, ref)
@@ -401,12 +410,20 @@ def forecast(conn, ref=None):
         "spending": spend, "late_income": late_income,
         "expected_not_counted": sum(e["amount"] for e in expected_incomes(conn)),
     }
+    f["spend_basis"] = "history" if spend else None
     if spend:
         f["projected_spend"] = spend["total"] * days
-        f["projected_end"] = free - f["projected_spend"]
     else:
-        f["projected_spend"] = f["projected_end"] = None
+        rates = [budget_daily(conn, ref + timedelta(days=i)) for i in range(days)]
+        if all(r is not None for r in rates):
+            f["projected_spend"] = sum(rates)
+            f["spend_basis"] = "budget"
+            f["budget_daily"] = rates[0]
+        else:
+            f["projected_spend"] = None
+    f["projected_end"] = free - f["projected_spend"] if f["projected_spend"] is not None else None
     f["cash_gap"] = free < 0 or (f["projected_end"] is not None and f["projected_end"] < 0)
+    f["gap_unknown"] = not f["cash_gap"] and f["projected_end"] is None
     return f
 
 
@@ -427,6 +444,79 @@ def daily_series(conn, ref=None, days_ahead=None):
         bal -= by_date.get(d, 0) + per_day
         out.append((d, bal))
     return out
+
+
+def cash_plan(conn, until, ref=None):
+    """План денег по дням до даты `until` через несколько выплат.
+
+    В отличие от forecast() учитывает ожидаемые доходы — но как ПЛАН: рядом всегда
+    считается вариант «если ожидаемые доходы не придут». Повседневные траты — по
+    истории (≥ 14 дней), иначе по месячным лимитам бюджета (лимит / дней в месяце)."""
+    ref = ref or today()
+    until = date.fromisoformat(_iso(until))
+    if until < ref:
+        raise ValueError("Дата плана раньше начальной даты")
+    events = []
+    for o in overdue(conn, ref):
+        events.append({"date": ref.isoformat(), "name": "Просрочено: " + o["name"], "amount": -o["remaining"],
+                       "kind": "obligation"})
+    for o in obligations(conn, ref, until, ref):
+        if o["remaining"] > 0:
+            events.append({"date": o["date"], "name": o["name"], "amount": -o["remaining"], "kind": "obligation"})
+    for e in expected_incomes(conn, ref):
+        if e["date"] <= until.isoformat():
+            events.append({"date": e["date"], "name": e["description"] or e["category"] or "Доход",
+                           "amount": e["amount"], "kind": "income"})
+    events.sort(key=lambda e: (e["date"], e["kind"] != "income"))
+    spend = daily_spending(conn, ref)
+    budgets = {}
+
+    def life_rate(d):
+        if spend:
+            return spend["total"]
+        if ym(d) not in budgets:
+            budgets[ym(d)] = budget_daily(conn, d)
+        return budgets[ym(d)]
+
+    start = balance_sheet(conn, ref)["liquid"]
+    bal = bal_cash = start
+    by_date = {}
+    for e in events:
+        by_date.setdefault(e["date"], []).append(e)
+    days, life_total, life_unknown = [], 0, False
+    d = ref
+    while d <= until:
+        iso = d.isoformat()
+        for e in by_date.get(iso, []):
+            bal += e["amount"]
+            if e["kind"] != "income":
+                bal_cash += e["amount"]
+        rate = life_rate(d)
+        if rate is None:
+            life_unknown = True
+            rate = 0
+        bal -= rate
+        bal_cash -= rate
+        life_total += rate
+        days.append({"date": iso, "balance": bal, "cash_only": bal_cash})
+        d += timedelta(days=1)
+    low = min(days, key=lambda x: x["balance"])
+    negative = []  # периоды, когда план уходит в минус: [начало, конец, худший остаток]
+    for x in days:
+        if x["balance"] < 0:
+            if negative and negative[-1][1] == (date.fromisoformat(x["date"]) - timedelta(days=1)).isoformat():
+                negative[-1][1] = x["date"]
+                negative[-1][2] = min(negative[-1][2], x["balance"])
+            else:
+                negative.append([x["date"], x["date"], x["balance"]])
+    neg = next((x["date"] for x in days if x["balance"] < 0), None)
+    neg_cash = next((x["date"] for x in days if x["cash_only"] < 0), None)
+    return {"ref": ref.isoformat(), "until": until.isoformat(), "start": start, "events": events, "days": days,
+            "income": sum(e["amount"] for e in events if e["kind"] == "income"),
+            "obligations": -sum(e["amount"] for e in events if e["kind"] != "income"),
+            "life": life_total, "life_basis": "история трат" if spend else "лимиты бюджета",
+            "life_unknown": life_unknown, "end": days[-1]["balance"], "low": low, "negative": negative,
+            "first_negative": neg, "cash_only_negative": neg_cash}
 
 
 # --------------------------------------------------------------- долги: план
@@ -649,13 +739,15 @@ def month_budget(conn, month):
 
 def expense_base(conn, ref=None):
     """Месячная база для подушки: средние (потребление + погашение тела долга)
-    за 3 полных месяца; если истории нет — месячная сумма обязательных платежей."""
+    за 3 полных месяца; если истории нет — обязательные платежи + бюджет месяца."""
     e = avg_monthly(conn, "expenses", ref=ref)
     p = avg_monthly(conn, "principal", ref=ref)
     if e:
         return e + (p or 0)
-    load = monthly_obligation_load(conn, ref)
-    return load or None
+    ref = ref or today()
+    budget = conn.execute("""SELECT COALESCE(SUM(b.amount),0) FROM budgets b JOIN categories c ON c.id=b.category_id
+                             WHERE b.month=? AND c.role<>'service'""", (ym(ref),)).fetchone()[0]
+    return (monthly_obligation_load(conn, ref) + budget) or None
 
 
 def _eta(remaining, per_month, ref):
@@ -833,7 +925,9 @@ def recommendations(conn, ref=None):
                    "Варианты: перенести необязательные платежи, договориться о сроке, ускорить поступление."
                    )
     elif f["projected_end"] is not None and f["projected_end"] < 0:
-        rec.append(f"При текущем темпе трат ({fmt(f['spending']['total'])}/день) денег до {f['horizon']} не хватит "
+        pace = (f"{fmt(f['spending']['total'])}/день" if f["spending"] else
+                f"по бюджету {fmt(f['budget_daily'])}/день")
+        rec.append(f"При текущем темпе трат ({pace}) денег до {f['horizon']} не хватит "
                    f"на {fmt(-f['projected_end'])}. Лимит на день: {fmt(max(0, f['daily_allowance']))}."
                    )
     if not f["horizon_known"]:

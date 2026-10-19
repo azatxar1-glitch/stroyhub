@@ -119,12 +119,52 @@ def forecast(conn, ref=None):
                  f"{fmt(s['essential'])}, прочие {fmt(s['other'])})")
         L.append(f"- Прогноз остатка к дате дохода: **{fmt(f['projected_end'])}** "
                  f"({fmt(f['free'])} − {fmt(s['total'])} × {f['days']})")
+    elif f["spend_basis"] == "budget":
+        L.append(f"- Истории трат меньше 14 дней — повседневные траты по бюджету: {fmt(f['budget_daily'])}/день")
+        L.append(f"- Прогноз остатка к дате дохода: **{fmt(f['projected_end'])}** "
+                 f"({fmt(f['free'])} − {fmt(f['projected_spend'])})")
     else:
-        L.append("- Средние траты: неизвестно (нужно ≥ 14 дней истории расходов)")
+        L.append("- Средние траты: неизвестно (нужно ≥ 14 дней истории расходов или бюджет на месяц)")
     if f["late_income"]:
         L.append(f"- ⚠ Просроченные ожидаемые поступления: {len(f['late_income'])} — не учтены")
     L.append("")
-    L.append("**⚠ Риск кассового разрыва**" if f["cash_gap"] else "Кассового разрыва не прогнозируется.")
+    if f["cash_gap"]:
+        short = -min(f["free"], f["projected_end"] if f["projected_end"] is not None else f["free"])
+        L.append(f"**⚠ Риск кассового разрыва: не хватает {fmt(short)} до {f['horizon']}**")
+    elif f["gap_unknown"]:
+        L.append("Риск кассового разрыва **неизвестен**: нет данных о повседневных тратах.")
+    else:
+        L.append("Кассового разрыва не прогнозируется.")
+    return "\n".join(L)
+
+
+def plan(conn, until, ref=None):
+    p = calc.cash_plan(conn, until, ref)
+    L = [f"## План денег с {p['ref']} по {p['until']}", "",
+         "Ожидаемые доходы здесь учитываются **как план** (если придут вовремя и в полной сумме). "
+         "Это не доступные деньги: колонка «если доходы не придут» показывает, когда закончатся реальные деньги.", ""]
+    running, rows = p["start"], [[p["ref"], "Фактически доступно на старте", "", fmt(p["start"])]]
+    bal_by_date = {d["date"]: d["balance"] for d in p["days"]}
+    for e in p["events"]:
+        running += e["amount"]
+        rows.append([e["date"], ("План дохода: " if e["kind"] == "income" else "") + e["name"],
+                     fmt(e["amount"], sign=True), fmt(bal_by_date[e["date"]])])
+    L.append(_table(["Дата", "Событие", "Сумма", "Остаток на конец дня (с тратами)"], rows))
+    life = ("неизвестно — задайте бюджет или ведите учёт 2 недели" if p["life_unknown"] and not p["life"]
+            else f"{fmt(p['life'])} ({p['life_basis']})" + (" — для части месяцев лимит не задан, там 0"
+                                                             if p["life_unknown"] else ""))
+    L += ["", f"- Старт: {fmt(p['start'])}",
+          f"- + ожидаемые доходы (план): {fmt(p['income'])}",
+          f"- − обязательные платежи и плановые расходы: {fmt(p['obligations'])}",
+          f"- − повседневные траты: {life}",
+          f"- **= остаток на {p['until']}: {fmt(p['end'])}** "
+          f"({fmt(p['start'])} + {fmt(p['income'])} − {fmt(p['obligations'])} − {fmt(p['life'])})",
+          f"- Минимальный остаток: **{fmt(p['low']['balance'])}** ({p['low']['date']})",
+          "- " + ("⚠ Минус даже при поступлении всех ожидаемых доходов: " + "; ".join(
+              f"{a}–{b} (до {fmt(w)})" if a != b else f"{a} ({fmt(w)})" for a, b, w in p["negative"])
+              if p["negative"] else "При поступлении всех доходов в срок минуса нет"),
+          "- " + (f"Если ожидаемые доходы не придут, деньги закончатся {p['cash_only_negative']}"
+                  if p["cash_only_negative"] else "Даже без ожидаемых доходов минуса нет")]
     return "\n".join(L)
 
 
@@ -223,7 +263,8 @@ def audit(conn, ref=None):
     L += ["", "### Утечки и что можно сократить"] + ([f"- {x}" for x in lk] or ["- явных утечек не найдено "
                                                                               "(или мало истории)"])
     f = calc.forecast(conn, ref)
-    L += ["", "### Риск кассового разрыва", "Есть" if f["cash_gap"] else "Не прогнозируется"]
+    L += ["", "### Риск кассового разрыва",
+          "Есть" if f["cash_gap"] else ("Неизвестен — нет данных о тратах" if f["gap_unknown"] else "Не прогнозируется")]
     return "\n".join(L)
 
 
