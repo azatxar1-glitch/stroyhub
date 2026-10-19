@@ -51,3 +51,7 @@ next-env.d.ts
 
 # database snapshots (contain personal data)
 /backups
+
+# personal finance database and its backups (finance/README.md)
+/finance/data/
+__pycache__/
